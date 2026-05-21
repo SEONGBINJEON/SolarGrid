@@ -47,6 +47,31 @@ function hasValidPlantCoordinate(plant) {
   return Number.isFinite(Number(plant.lat)) && Number.isFinite(Number(plant.lng))
 }
 
+function getPanelTitle({ selectedPlant, viewLevel }) {
+  if (selectedPlant) {
+    return '발전소 현황'
+  }
+
+  if (viewLevel === 'jeonnam') {
+    return '지역 현황'
+  }
+
+  if (viewLevel === 'sinan') {
+    return '도시 현황'
+  }
+
+  return '전국 현황'
+}
+
+function PanelHeader({ selectedPlant, viewLevel }) {
+  return (
+    <div className="panel-overview-header">
+      <p>AI 발전량 예측 기반 출력제어 모니터링</p>
+      <h2>{getPanelTitle({ selectedPlant, viewLevel })}</h2>
+    </div>
+  )
+}
+
 function ViewDetailAction({ onClick }) {
   if (!onClick) {
     return null
@@ -421,42 +446,46 @@ function SidePanel({
   viewLevel,
 }) {
   return (
-    <div>
-      {loading && (
-        <div className="mb-4 rounded-[18px] border border-sky-200 bg-sky-50 p-3 text-[13px] text-sky-700">
-          CSV 데이터를 불러오는 중입니다.
-        </div>
-      )}
-      {error && (
-        <div className="mb-4 rounded-[18px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-700">
-          일부 CSV 로딩에 실패해 fallback 데이터를 표시하고 있습니다.
-        </div>
-      )}
+    <div className="side-panel-shell">
+      <PanelHeader selectedPlant={selectedPlant} viewLevel={viewLevel} />
 
-      {selectedPlant ? (
-        <PlantDetail onPlantDetailOpen={onPlantDetailOpen} plant={selectedPlant} />
-      ) : viewLevel === 'national' ? (
-        <NationalOverview
+      <div className="side-panel-scroll">
+        {loading && (
+          <div className="mb-4 rounded-[18px] border border-sky-200 bg-sky-50 p-3 text-[13px] text-sky-700">
+            CSV 데이터를 불러오는 중입니다.
+          </div>
+        )}
+        {error && (
+          <div className="mb-4 rounded-[18px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-700">
+            일부 CSV 로딩에 실패해 fallback 데이터를 표시하고 있습니다.
+          </div>
+        )}
+
+        {selectedPlant ? (
+          <PlantDetail onPlantDetailOpen={onPlantDetailOpen} plant={selectedPlant} />
+        ) : viewLevel === 'national' ? (
+          <NationalOverview
+            forecastRows={forecastRows}
+            plants={plants}
+            regionRiskSummary={regionRiskSummary}
+            selectedDate={selectedDate}
+            selectedHour={selectedHour}
+            selectedRegion={selectedRegion}
+          />
+        ) : viewLevel === 'jeonnam' ? (
+          <JeonnamOverview jeonnamDemo={jeonnamDemo} />
+        ) : (
+          <SinanOverview shinanPlants={shinanPlants} />
+        )}
+
+        <ForecastChart
           forecastRows={forecastRows}
-          plants={plants}
-          regionRiskSummary={regionRiskSummary}
           selectedDate={selectedDate}
-          selectedHour={selectedHour}
+          selectedPlant={selectedPlant}
           selectedRegion={selectedRegion}
+          viewLevel={viewLevel}
         />
-      ) : viewLevel === 'jeonnam' ? (
-        <JeonnamOverview jeonnamDemo={jeonnamDemo} />
-      ) : (
-        <SinanOverview shinanPlants={shinanPlants} />
-      )}
-
-      <ForecastChart
-        forecastRows={forecastRows}
-        selectedDate={selectedDate}
-        selectedPlant={selectedPlant}
-        selectedRegion={selectedRegion}
-        viewLevel={viewLevel}
-      />
+      </div>
     </div>
   )
 }

@@ -60,6 +60,30 @@ function ViewController({ viewLevel }) {
   return null
 }
 
+function SelectedPlantFocus({ selectedPlant, viewLevel }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (viewLevel !== 'sinan' || !selectedPlant) {
+      return
+    }
+
+    const lat = Number(selectedPlant.lat)
+    const lng = Number(selectedPlant.lng)
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return
+    }
+
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 13), {
+      animate: true,
+      duration: 0.8,
+    })
+  }, [map, selectedPlant, viewLevel])
+
+  return null
+}
+
 function DashboardMap({
   forecastRows,
   jeonnamDemo,
@@ -92,6 +116,7 @@ function DashboardMap({
     >
       <TileLayer
         attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+        className="satellite-tile-layer"
         maxZoom={18}
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       />
@@ -100,6 +125,7 @@ function DashboardMap({
         url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
       />
       <ViewController viewLevel={viewLevel} />
+      <SelectedPlantFocus selectedPlant={selectedPlant} viewLevel={viewLevel} />
       {viewLevel === 'national' ? <NeighboringCityLabels /> : null}
 
       {viewLevel === 'sinan'

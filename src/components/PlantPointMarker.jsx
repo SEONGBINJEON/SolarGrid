@@ -13,13 +13,13 @@ function PlantPointMarker({ plant, onSelect, selected }) {
         mouseover: () => setHovered(true),
       }}
       pathOptions={{
-        color: selected ? '#0f766e' : '#ffffff',
-        fillColor: selected ? '#0f766e' : '#ef4444',
-        fillOpacity: selected ? 0.96 : hovered ? 0.96 : 0.84,
+        color: selected ? '#f8fafc' : '#ffffff',
+        fillColor: selected ? '#0f2f4f' : '#ef4444',
+        fillOpacity: selected ? 1 : hovered ? 0.96 : 0.84,
         opacity: 1,
-        weight: selected ? 2 : hovered ? 2 : 1.5,
+        weight: selected ? 3 : hovered ? 2 : 1.5,
       }}
-      radius={selected ? 7 : hovered ? 6 : 4}
+      radius={selected ? 8 : hovered ? 6 : 4}
     />
   )
 }

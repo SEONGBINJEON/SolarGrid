@@ -10,12 +10,6 @@ import LoginPage from './pages/LoginPage'
 
 const AUTH_STORAGE_KEY = 'solargrid-authenticated'
 
-const stageLabels = {
-  national: '전국',
-  jeonnam: '전라남도',
-  sinan: '신안군',
-}
-
 const stageControls = [
   { id: 'national', label: '전국' },
   { id: 'jeonnam', label: '지역' },
@@ -132,8 +126,14 @@ function DashboardApp({ onLogout }) {
   const [viewLevel, setViewLevel] = useState('national')
   const [selectedRegion, setSelectedRegion] = useState(null)
   const [selectedPlant, setSelectedPlant] = useState(null)
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate] = useState('')
   const [selectedHour, setSelectedHour] = useState(13)
+  const mapShellRef = useRef(null)
+  const infoPanelRef = useRef(null)
+  const controlPanelRef = useRef(null)
+  const [infoPanelPosition, setInfoPanelPosition] = useState(null)
+  const [controlPanelPosition, setControlPanelPosition] = useState(null)
+  const [draggingPanel, setDraggingPanel] = useState(null)
 
   const {
     availableDates,
@@ -187,6 +187,17 @@ function DashboardApp({ onLogout }) {
     }
   }
 
+  const handleSelectPlant = (plant) => {
+    setSelectedPlant(plant)
+  }
+
+  const handlePlantSearchSelect = (plant) => {
+    setCurrentPage('forecast')
+    setViewLevel('sinan')
+    setSelectedRegion(null)
+    setSelectedPlant(plant)
+  }
+
   const handleStageChange = (nextLevel) => {
     setViewLevel(nextLevel)
     setSelectedPlant(null)
@@ -212,22 +223,88 @@ function DashboardApp({ onLogout }) {
   const openSectorCoupling = () => setCurrentPage('sector')
   const openForecastMap = () => setCurrentPage('forecast')
 
+  const clampPanelPosition = (x, y, panelElement) => {
+    const shellElement = mapShellRef.current
+
+    if (!shellElement || !panelElement) {
+      return { x, y }
+    }
+
+    const shellRect = shellElement.getBoundingClientRect()
+    const panelRect = panelElement.getBoundingClientRect()
+    const padding = 8
+    const maxX = Math.max(padding, shellRect.width - panelRect.width - padding)
+    const maxY = Math.max(padding, shellRect.height - panelRect.height - padding)
+
+    return {
+      x: Math.min(Math.max(x, padding), maxX),
+      y: Math.min(Math.max(y, padding), maxY),
+    }
+  }
+
+  const startPanelDrag = (event, panelName) => {
+    if (event.button !== 0) {
+      return
+    }
+
+    const panelElement =
+      panelName === 'info' ? infoPanelRef.current : controlPanelRef.current
+    const shellElement = mapShellRef.current
+
+    if (!panelElement || !shellElement) {
+      return
+    }
+
+    const shellRect = shellElement.getBoundingClientRect()
+    const panelRect = panelElement.getBoundingClientRect()
+    const startX = panelRect.left - shellRect.left
+    const startY = panelRect.top - shellRect.top
+    const pointerStartX = event.clientX
+    const pointerStartY = event.clientY
+    const setPosition =
+      panelName === 'info' ? setInfoPanelPosition : setControlPanelPosition
+
+    event.preventDefault()
+    setDraggingPanel(panelName)
+
+    const handlePointerMove = (moveEvent) => {
+      const nextPosition = clampPanelPosition(
+        startX + moveEvent.clientX - pointerStartX,
+        startY + moveEvent.clientY - pointerStartY,
+        panelElement,
+      )
+
+      setPosition(nextPosition)
+    }
+
+    const handlePointerUp = () => {
+      setDraggingPanel(null)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+  }
+
   return (
     <div className="app-layout">
       <Sidebar
         currentPage={currentPage}
         onLogout={onLogout}
         onPageChange={handlePageChange}
+        onPlantSearchSelect={handlePlantSearchSelect}
+        searchPlants={shinanPlants}
       />
 
       <div className="app-main">
         {/* ---- Forecast Map page ---- */}
         {currentPage === 'forecast' && (
-          <div className="forecast-map-shell">
+          <div className="forecast-map-shell" ref={mapShellRef}>
             <DashboardMap
               forecastRows={forecastRows}
               jeonnamDemo={jeonnamDemo}
-              onPlantSelect={setSelectedPlant}
+              onPlantSelect={handleSelectPlant}
               onRegionSelect={handleRegionSelect}
               selectedDate={effectiveDate}
               selectedHour={selectedHour}
@@ -236,18 +313,27 @@ function DashboardApp({ onLogout }) {
               viewLevel={viewLevel}
             />
 
-            {/* Top-left title */}
-            <div className="map-overlay-title">
-              <p className="text-[10px] font-medium text-white/45">
-                AI 발전량 예측 기반 출력제어 모니터링
-              </p>
-              <h2 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-white">
-                {stageLabels[viewLevel]} 현황
-              </h2>
-            </div>
-
             {/* Right side info panel */}
-            <div className="map-overlay-panel">
+            <div
+              className={`map-overlay-panel ${
+                draggingPanel === 'info' ? 'is-dragging' : ''
+              }`}
+              ref={infoPanelRef}
+              style={
+                infoPanelPosition
+                  ? {
+                      left: `${infoPanelPosition.x}px`,
+                      right: 'auto',
+                      top: `${infoPanelPosition.y}px`,
+                    }
+                  : undefined
+              }
+              onPointerDown={(event) => {
+                if (event.target.closest('.panel-overview-header')) {
+                  startPanelDrag(event, 'info')
+                }
+              }}
+            >
               <SidePanel
                 error={error}
                 forecastRows={forecastRows}
@@ -265,14 +351,38 @@ function DashboardApp({ onLogout }) {
               />
             </div>
 
-            {/* Bottom floating control bar — below right panel */}
-            <footer className="map-overlay-controls">
+            {/* Bottom floating glass control bar */}
+            <footer
+              className={`map-overlay-controls ${
+                draggingPanel === 'controls' ? 'is-dragging' : ''
+              }`}
+              ref={controlPanelRef}
+              style={
+                controlPanelPosition
+                  ? {
+                      bottom: 'auto',
+                      left: `${controlPanelPosition.x}px`,
+                      right: 'auto',
+                      top: `${controlPanelPosition.y}px`,
+                    }
+                  : undefined
+              }
+            >
+              <button
+                aria-label="하단 기능 패널 이동"
+                className="control-drag-handle"
+                onPointerDown={(event) => startPanelDrag(event, 'controls')}
+                type="button"
+              />
+
               <TimeControl
                 dataHourRange={dataHourRange}
                 hourSequence={hourSequence}
                 onHourChange={setSelectedHour}
                 selectedHour={selectedHour}
               />
+
+              <div className="ctrl-divider" />
 
               <div className="stage-control-group">
                 <span className="stage-label">단계</span>
@@ -289,6 +399,8 @@ function DashboardApp({ onLogout }) {
                   </button>
                 ))}
               </div>
+
+              <div className="ctrl-divider" />
 
               <div className="legend-wrap">
                 <span className="text-[11px] font-medium text-slate-400">범례</span>

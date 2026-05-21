@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const NAV_ITEMS = [
   { id: 'forecast', label: 'Forecast Map' },
@@ -39,7 +39,6 @@ function CouplingIcon({ active }) {
   )
 }
 
-
 const ICONS = { forecast: ForecastIcon, plantDetail: PlantIcon, sector: CouplingIcon }
 
 function SunLogo() {
@@ -64,8 +63,115 @@ function SunLogo() {
   )
 }
 
-function Sidebar({ currentPage, onLogout, onPageChange }) {
+function formatCapacity(plant) {
+  const capacity = plant.permitted_capacity_kw ?? plant.solar_capacity
+  const numberValue = Number(capacity)
+
+  if (!Number.isFinite(numberValue)) {
+    return ''
+  }
+
+  return `${numberValue.toLocaleString()} kW`
+}
+
+function getPlantLocation(plant) {
+  return (
+    plant.township ||
+    plant.matched_township ||
+    plant.installation_address ||
+    plant.address ||
+    plant.matched_address ||
+    plant.original_address ||
+    '신안군'
+  )
+}
+
+function hasValidCoordinate(plant) {
+  return Number.isFinite(Number(plant.lat)) && Number.isFinite(Number(plant.lng))
+}
+
+function Sidebar({
+  currentPage,
+  onLogout,
+  onPageChange,
+  onPlantSearchSelect,
+  searchPlants = [],
+}) {
   const [search, setSearch] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const searchWrapRef = useRef(null)
+  const normalizedSearch = search.trim().toLowerCase()
+  const searchResults = useMemo(() => {
+    if (normalizedSearch.length === 0) {
+      return []
+    }
+
+    return searchPlants
+      .filter(
+        (plant) =>
+          hasValidCoordinate(plant) &&
+          String(plant.plant_name ?? '').toLowerCase().includes(normalizedSearch),
+      )
+      .slice(0, 8)
+  }, [normalizedSearch, searchPlants])
+  const showNoResults =
+    isSearchOpen && normalizedSearch.length > 0 && searchResults.length === 0
+  const selectedResultIndex =
+    searchResults.length === 0 ? 0 : Math.min(activeIndex, searchResults.length - 1)
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!searchWrapRef.current?.contains(event.target)) {
+        setIsSearchOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+
+    return () => window.removeEventListener('pointerdown', handlePointerDown)
+  }, [])
+
+  const selectPlant = (plant) => {
+    setSearch(plant.plant_name ?? '')
+    setIsSearchOpen(false)
+    onPlantSearchSelect?.(plant)
+  }
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setIsSearchOpen(false)
+      return
+    }
+
+    if (!isSearchOpen && (event.key === 'ArrowDown' || event.key === 'Enter')) {
+      setIsSearchOpen(true)
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActiveIndex((index) =>
+        searchResults.length === 0 ? 0 : Math.min(index + 1, searchResults.length - 1),
+      )
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveIndex((index) => Math.max(index - 1, 0))
+      return
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault()
+
+      if (searchResults[selectedResultIndex]) {
+        selectPlant(searchResults[selectedResultIndex])
+      } else {
+        setIsSearchOpen(true)
+      }
+    }
+  }
 
   return (
     <aside className="sidebar">
@@ -87,14 +193,47 @@ function Sidebar({ currentPage, onLogout, onPageChange }) {
         </div>
       </div>
 
-      <div className="sidebar-search-wrap">
+      <div className="sidebar-search-wrap" ref={searchWrapRef}>
         <input
           className="sidebar-search"
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setActiveIndex(0)
+            setIsSearchOpen(true)
+          }}
+          onFocus={() => setIsSearchOpen(true)}
+          onKeyDown={handleSearchKeyDown}
           placeholder="지역 또는 발전소 검색"
           type="text"
           value={search}
         />
+
+        {isSearchOpen && normalizedSearch.length > 0 && (
+          <div className="sidebar-search-dropdown">
+            {searchResults.map((plant, index) => (
+              <button
+                className={`sidebar-search-result ${
+                  selectedResultIndex === index ? 'is-active' : ''
+                }`}
+                key={plant.plant_id ?? `${plant.plant_name}-${index}`}
+                onClick={() => selectPlant(plant)}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActiveIndex(index)}
+                type="button"
+              >
+                <span className="sidebar-result-name">{plant.plant_name}</span>
+                <span className="sidebar-result-meta">
+                  {getPlantLocation(plant)}
+                  {formatCapacity(plant) ? ` · ${formatCapacity(plant)}` : ''}
+                </span>
+              </button>
+            ))}
+
+            {showNoResults && (
+              <div className="sidebar-search-empty">일치하는 발전소가 없습니다.</div>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="sidebar-nav">
@@ -120,7 +259,7 @@ function Sidebar({ currentPage, onLogout, onPageChange }) {
 
       <div className="sidebar-footer">
         <button className="sidebar-logout" onClick={onLogout} type="button">
-          로그아웃
+          Logout
         </button>
       </div>
     </aside>
