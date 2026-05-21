@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import {
   Bar,
@@ -20,9 +20,9 @@ const CASE_DEFS = {
     bg: 'rgba(14,165,233,0.07)',
     border: 'rgba(14,165,233,0.25)',
     paperTitle:
-      'Energy Management System for Polygeneration Microgrids with Renewable Energy Sources and Storage',
+      'Energy Management System for Polygeneration Microgrids with Renewable Energy Sources and Storage (2024)',
     formula: 'P_t^{load} = P_t^{ESS} + P_t^{EV} + P_t^{P2H}',
-    formulaDesc: '시간 t의 부하는 ESS, EV, P2H 분배량의 합으로 구성됨',
+    formulaDesc: '시간 t에서 발생한 부하 수요를 ESS, EV, P2H가 흡수하는 분배 문제로 해석합니다.',
     note: '분배대상 전 시간대에서 ESS 사용 가능',
   },
   2: {
@@ -33,9 +33,9 @@ const CASE_DEFS = {
     bg: 'rgba(139,92,246,0.07)',
     border: 'rgba(139,92,246,0.25)',
     paperTitle:
-      'Reducing Curtailed Wind Energy Through Energy Storage and Demand Response in Grid-Connected Systems',
-    formula: 'p_{l,t} = min(p_l^{cap}, s_t) · δ_{l,t}',
-    formulaDesc: 'l 자원 t 시간대 분배량은 수용 한계와 잉여전력 중 최솟값 × 이진 스케줄 변수',
+      'A comprehensive framework for optimal energy management in renewable-integrated multi-energy carrier systems (2025)',
+    formula: 'p_{l,t} - q_{DR,t} + q_{Rb,t} = p_{w,t} + p_{dchg,t} - p_{chg,t} - p_{cw,t}',
+    formulaDesc: '수요반응, 재생에너지, 충방전 제약을 함께 고려해 시간대별 에너지 균형을 맞춥니다.',
     note: '잉여전력이 최대인 1개 시간대에서만 ESS 사용',
   },
   3: {
@@ -46,9 +46,9 @@ const CASE_DEFS = {
     bg: 'rgba(16,185,129,0.07)',
     border: 'rgba(16,185,129,0.25)',
     paperTitle:
-      'A Comprehensive Framework for Optimal Energy Management in Microgrids with Sector Coupling',
+      'A Comprehensive Framework for Optimal Energy Management in Microgrids with Sector Coupling (2017)',
     formula: 'min Z = Σ_t (C_{ESS}·x_{ESS,t} + C_{EV}·x_{EV,t} + C_{P2H}·x_{P2H,t})',
-    formulaDesc: '전체 비용 Z를 최소화하는 시간대별 자원 배분 최적화',
+    formulaDesc: 'ESS, EV, P2H 자원별 비용과 시간대별 배분량을 합산해 전체 운영 비용을 최소화합니다.',
     note: '잉여전력 상위 2개 시간대에서만 ESS 사용',
   },
 }
@@ -71,187 +71,208 @@ function fmt(v, d = 3) {
   return Number.isFinite(n) ? n.toFixed(d) : '-'
 }
 
+function FormulaToken({ children, sub, sup }) {
+  return (
+    <span className="formula-token">
+      {children}
+      {sub && <sub>{sub}</sub>}
+      {sup && <sup>{sup}</sup>}
+    </span>
+  )
+}
+
+function FormulaCard({ caseInfo }) {
+  return (
+    <div className="sector-formula-card">
+      <div className="sector-formula-label">
+        <span>대표 수식</span>
+        <small>{caseInfo.label}</small>
+      </div>
+
+      {caseInfo.id === 1 && (
+        <div className="sector-formula-equation">
+          <FormulaToken sub="t" sup="load">P</FormulaToken>
+          <span>=</span>
+          <FormulaToken sub="t" sup="ESS">P</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="t" sup="EV">P</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="t" sup="P2H">P</FormulaToken>
+        </div>
+      )}
+
+      {caseInfo.id === 2 && (
+        <div className="sector-formula-equation sector-formula-equation-long">
+          <FormulaToken sub="l,t">p</FormulaToken>
+          <span>-</span>
+          <FormulaToken sub="DR,t">q</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="Rb,t">q</FormulaToken>
+          <span>=</span>
+          <FormulaToken sub="w,t">p</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="dchg,t">p</FormulaToken>
+          <span>-</span>
+          <FormulaToken sub="chg,t">p</FormulaToken>
+          <span>-</span>
+          <FormulaToken sub="cw,t">p</FormulaToken>
+        </div>
+      )}
+
+      {caseInfo.id === 3 && (
+        <div className="sector-formula-equation sector-formula-equation-long">
+          <span>min</span>
+          <FormulaToken>Z</FormulaToken>
+          <span>=</span>
+          <span className="formula-sigma">Σ<sub>t</sub></span>
+          <span>(</span>
+          <FormulaToken sub="ESS">C</FormulaToken>
+          <span>·</span>
+          <FormulaToken sub="ESS,t">x</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="EV">C</FormulaToken>
+          <span>·</span>
+          <FormulaToken sub="EV,t">x</FormulaToken>
+          <span>+</span>
+          <FormulaToken sub="P2H">C</FormulaToken>
+          <span>·</span>
+          <FormulaToken sub="P2H,t">x</FormulaToken>
+          <span>)</span>
+        </div>
+      )}
+
+      <p className="sector-formula-desc">{caseInfo.formulaDesc}</p>
+    </div>
+  )
+}
+
+const FLOW_POSITIONS = {
+  plant: { x: 50, y: 54 },
+  ess: { x: 19, y: 24 },
+  ev: { x: 81, y: 24 },
+  p2h: { x: 64, y: 80 },
+}
+
+const SATELLITE_TILE_URLS = [
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6503/13930',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6503/13931',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6503/13932',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6504/13930',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6504/13931',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/6504/13932',
+]
+
+function getFlowWidth(value, maxValue) {
+  if (value <= 0) {
+    return 1.2
+  }
+
+  return 1.8 + (value / Math.max(maxValue, 0.001)) * 3.8
+}
+
 // ---- Flow Diagram ----
-function FlowDiagram({ caseRows, caseColor, essTot, evTot, p2hTot }) {
+function FlowDiagram({ caseRows, essTot, evTot, p2hTot }) {
   const hasFlow = essTot + evTot + p2hTot > 0
   const surplus = caseRows.reduce((s, r) => s + (r.surplus_mwh ?? 0), 0)
-
-  const lineColor = hasFlow ? caseColor : '#cbd5e1'
-  const p2hLineColor = hasFlow ? '#10b981' : '#cbd5e1'
+  const maxFlow = Math.max(essTot, evTot, p2hTot, 0.001)
+  const flows = [
+    { id: 'ess', label: 'ESS', site: '안좌스마트팜앤쏠라시티', value: essTot, color: '#0ea5e9' },
+    { id: 'ev', label: 'EV', site: '안좌한전 충전소', value: evTot, color: '#8b5cf6' },
+    { id: 'p2h', label: 'P2H', site: '안좌면 행정복지센터', value: p2hTot, color: '#10b981' },
+  ]
+  const plant = FLOW_POSITIONS.plant
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        height: 244,
-        borderRadius: 12,
-        background: 'rgba(248,250,252,0.92)',
-        border: '1px solid rgba(15,23,42,0.07)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* SVG overlay for lines */}
+    <div className="sector-map-canvas">
+      <div aria-hidden="true" className="sector-map-tile-grid">
+        {SATELLITE_TILE_URLS.map((url) => (
+          <div
+            className="sector-map-tile"
+            key={url}
+            style={{ backgroundImage: `url("${url}")` }}
+          />
+        ))}
+      </div>
+      <div className="sector-map-overlay" />
+      <div className="sector-map-label">Anjwa-myeon simulation layer</div>
+
       <svg
         preserveAspectRatio="none"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+        className="sector-map-svg"
         viewBox="0 0 100 100"
       >
-        {/* Grid dots */}
-        {[25, 50, 75].flatMap((x) =>
-          [25, 50, 75].map((y) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} fill="rgba(148,163,184,0.25)" r="0.4" />
-          )),
-        )}
+        <defs>
+          <filter id="sectorFlowGlow" x="-35%" y="-35%" width="170%" height="170%">
+            <feGaussianBlur result="coloredBlur" stdDeviation="1.6" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-        {/* Plant → ESS */}
-        <line
-          className={hasFlow ? 'sector-flow-line' : ''}
-          stroke={lineColor}
-          strokeDasharray={hasFlow ? '5 3' : '2 3'}
-          strokeWidth="1"
-          x1="50" x2="16" y1="50" y2="22"
-        />
-        {/* Plant → EV */}
-        <line
-          className={hasFlow ? 'sector-flow-line' : ''}
-          stroke={lineColor}
-          strokeDasharray={hasFlow ? '5 3' : '2 3'}
-          strokeWidth="1"
-          x1="50" x2="84" y1="50" y2="22"
-          style={{ animationDelay: '0.45s' }}
-        />
-        {/* Plant → P2H */}
-        <line
-          className={hasFlow ? 'sector-flow-line' : ''}
-          stroke={p2hLineColor}
-          strokeDasharray={hasFlow ? '5 3' : '2 3'}
-          strokeWidth="1"
-          x1="50" x2="50" y1="50" y2="84"
-          style={{ animationDelay: '0.9s' }}
-        />
+        {flows.map((flow, index) => {
+          const target = FLOW_POSITIONS[flow.id]
+          const active = hasFlow && flow.value > 0
+          const path = `M${plant.x},${plant.y} C${plant.x},${target.y} ${target.x},${plant.y} ${target.x},${target.y}`
 
-        {/* Flow direction arrows (only when active) */}
-        {hasFlow && (
-          <>
-            <circle cx="30" cy="34" fill={caseColor} opacity="0.7" r="1">
-              <animateMotion dur="1.8s" repeatCount="indefinite" path="M50,50 L16,22" />
-            </circle>
-            <circle cx="70" cy="34" fill={caseColor} opacity="0.7" r="1">
-              <animateMotion begin="0.6s" dur="1.8s" repeatCount="indefinite" path="M50,50 L84,22" />
-            </circle>
-            <circle cx="50" cy="67" fill="#10b981" opacity="0.7" r="1">
-              <animateMotion begin="1.2s" dur="1.8s" repeatCount="indefinite" path="M50,50 L50,84" />
-            </circle>
-          </>
-        )}
+          return (
+            <g key={flow.id}>
+              <path
+                className={active ? 'sector-map-flow is-active' : 'sector-map-flow'}
+                d={path}
+                filter={active ? 'url(#sectorFlowGlow)' : undefined}
+                stroke={active ? flow.color : 'rgba(203,213,225,0.55)'}
+                strokeWidth={getFlowWidth(flow.value, maxFlow)}
+                style={{ animationDelay: `${index * 0.28}s` }}
+              />
+              {active && (
+                <circle
+                  className="sector-map-pulse"
+                  fill={flow.color}
+                  r={1.1 + getFlowWidth(flow.value, maxFlow) * 0.12}
+                  style={{ animationDelay: `${index * 0.35}s` }}
+                >
+                  <animateMotion dur="2.2s" repeatCount="indefinite" path={path} />
+                </circle>
+              )}
+            </g>
+          )
+        })}
       </svg>
 
-      {/* Plant node */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%,-50%)',
-          background: '#0f172a',
-          borderRadius: 12,
-          padding: '9px 16px',
-          minWidth: 136,
-          textAlign: 'center',
-          boxShadow: '0 4px 16px rgba(15,23,42,0.22)',
-          zIndex: 2,
-        }}
-      >
-        <p style={{ fontSize: 9, color: '#fbbf24', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 3 }}>
-          ☀ SOLAR PLANT
-        </p>
-        <p style={{ fontSize: 10, fontWeight: 600, color: '#fff', lineHeight: 1.35 }}>
+      <div className="sector-map-node sector-map-node-plant" style={{ left: `${plant.x}%`, top: `${plant.y}%` }}>
+        <p className="sector-map-node-kicker">PV Plant</p>
+        <p className="sector-map-node-name">
           안좌솔민발전소제1호
         </p>
         {surplus > 0 && (
-          <p style={{ fontSize: 9, color: '#fbbf24', marginTop: 4 }}>
+          <p className="sector-map-node-value">
             잉여 {fmt(surplus, 2)} MWh
           </p>
         )}
       </div>
 
-      {/* ESS node */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '16%',
-          top: '22%',
-          transform: 'translate(-50%,-50%)',
-          background: '#fff',
-          border: '1.5px solid rgba(14,165,233,0.3)',
-          borderRadius: 10,
-          padding: '7px 11px',
-          minWidth: 108,
-          textAlign: 'center',
-          boxShadow: '0 2px 8px rgba(14,165,233,0.1)',
-          zIndex: 2,
-        }}
-      >
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#0ea5e9', marginBottom: 2 }}>ESS</p>
-        <p style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.3 }}>안좌스마트팜앤쏠라시티</p>
-        {hasFlow && (
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#0ea5e9', marginTop: 3 }}>
-            {fmt(essTot, 3)} MWh
-          </p>
-        )}
-      </div>
+      {flows.map((flow) => {
+        const pos = FLOW_POSITIONS[flow.id]
+        const isPrimary = flow.value === maxFlow && flow.value > 0
 
-      {/* EV node */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '84%',
-          top: '22%',
-          transform: 'translate(-50%,-50%)',
-          background: '#fff',
-          border: '1.5px solid rgba(139,92,246,0.3)',
-          borderRadius: 10,
-          padding: '7px 11px',
-          minWidth: 108,
-          textAlign: 'center',
-          boxShadow: '0 2px 8px rgba(139,92,246,0.1)',
-          zIndex: 2,
-        }}
-      >
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#8b5cf6', marginBottom: 2 }}>EV</p>
-        <p style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.3 }}>안좌한전 충전소</p>
-        {hasFlow && (
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', marginTop: 3 }}>
-            {fmt(evTot, 3)} MWh
-          </p>
-        )}
-      </div>
-
-      {/* P2H node */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '84%',
-          transform: 'translate(-50%,-50%)',
-          background: '#fff',
-          border: '1.5px solid rgba(16,185,129,0.3)',
-          borderRadius: 10,
-          padding: '7px 11px',
-          minWidth: 108,
-          textAlign: 'center',
-          boxShadow: '0 2px 8px rgba(16,185,129,0.1)',
-          zIndex: 2,
-        }}
-      >
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#10b981', marginBottom: 2 }}>P2H</p>
-        <p style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.3 }}>안좌면 행정복지센터</p>
-        {hasFlow && (
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#10b981', marginTop: 3 }}>
-            {fmt(p2hTot, 3)} MWh
-          </p>
-        )}
-      </div>
+        return (
+          <div
+            className={`sector-map-node sector-map-node-resource ${isPrimary ? 'is-primary' : ''}`}
+            key={flow.id}
+            style={{
+              '--node-color': flow.color,
+              left: `${pos.x}%`,
+              top: `${pos.y}%`,
+            }}
+          >
+            <p className="sector-map-node-kicker">{flow.label}</p>
+            <p className="sector-map-node-name">{flow.site}</p>
+            {hasFlow && <p className="sector-map-node-value">{fmt(flow.value, 3)} MWh</p>}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -559,7 +580,7 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
     fetch('/data/sector_coupling_compare.csv')
       .then((r) => r.text())
       .then((text) => {
-        const { data } = Papa.parse(text.replace(/^﻿/, ''), {
+        const { data } = Papa.parse(text.replace(/^\uFEFF/, ''), {
           header: true,
           skipEmptyLines: true,
         })
@@ -598,19 +619,15 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
   const currentCompare = compareData.find((r) => r.구분 === caseInfo.essMethod)
   const utilizationPct = currentCompare?.utilizationPct ?? 0
 
-  const chartData = useMemo(
-    () =>
-      caseRows
-        .filter((r) => r.hour >= 6 && r.hour <= 20)
-        .map((r) => ({
-          hour: r.hour,
-          ESS: r.ess_allocation_mwh ?? 0,
-          EV: r.ev_allocation_mwh ?? 0,
-          P2H: r.p2h_allocation_mwh ?? 0,
-          잔여제한: Math.max(0, r.remaining_curtailment_mwh ?? 0),
-        })),
-    [caseRows],
-  )
+  const chartData = caseRows
+    .filter((r) => r.hour >= 6 && r.hour <= 20)
+    .map((r) => ({
+      hour: r.hour,
+      ESS: r.ess_allocation_mwh ?? 0,
+      EV: r.ev_allocation_mwh ?? 0,
+      P2H: r.p2h_allocation_mwh ?? 0,
+      잔여제한: Math.max(0, r.remaining_curtailment_mwh ?? 0),
+    }))
 
   return (
     <div className="sector-shell" style={{ gridTemplateRows: 'unset' }}>
@@ -623,7 +640,17 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
             전라남도 신안군 안좌면 · 출력제한 위험시간대 11~15시
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            padding: 4,
+            borderRadius: 999,
+            background: 'rgba(248,250,252,0.92)',
+            border: '1px solid rgba(15,23,42,0.08)',
+          }}
+        >
           {[1, 2, 3].map((c) => (
             <button
               key={c}
@@ -631,7 +658,7 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
               style={{
                 padding: '7px 20px',
                 borderRadius: 20,
-                border: `1.5px solid ${activeCase === c ? CASE_DEFS[c].color : 'rgba(15,23,42,0.12)'}`,
+                border: `1px solid ${activeCase === c ? CASE_DEFS[c].color : 'transparent'}`,
                 background: activeCase === c ? CASE_DEFS[c].color : 'transparent',
                 color: activeCase === c ? '#fff' : '#64748b',
                 fontSize: 13,
@@ -644,9 +671,6 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
               {CASE_DEFS[c].label}
             </button>
           ))}
-          <button className="plant-detail-back-btn" onClick={onForecastOpen} type="button">
-            ← Forecast Map
-          </button>
         </div>
       </div>
 
@@ -683,7 +707,6 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
         {/* Left: flow diagram + chart */}
         <div>
           <FlowDiagram
-            caseColor={caseInfo.color}
             caseRows={caseRows}
             essTot={essTot}
             evTot={evTot}
@@ -699,8 +722,9 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
             style={{
               borderRadius: 12,
               border: '1px solid rgba(15,23,42,0.07)',
-              background: '#fff',
+              background: 'linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)',
               padding: '16px 18px',
+              boxShadow: '0 10px 30px rgba(15,23,42,0.05)',
             }}
           >
             <p
@@ -718,37 +742,20 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
             <p
               style={{
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 700,
                 color: '#0f172a',
-                lineHeight: 1.55,
-                marginBottom: 11,
+                lineHeight: 1.45,
+                marginBottom: 12,
+                letterSpacing: '-0.01em',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
               }}
             >
               {caseInfo.paperTitle}
             </p>
-            <div
-              style={{
-                background: 'rgba(15,23,42,0.04)',
-                borderRadius: 8,
-                padding: '10px 12px',
-                border: '1px solid rgba(15,23,42,0.06)',
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "'Courier New', monospace",
-                  fontSize: 12,
-                  color: '#1e40af',
-                  lineHeight: 1.6,
-                  wordBreak: 'break-all',
-                }}
-              >
-                {caseInfo.formula}
-              </p>
-            </div>
-            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 7, lineHeight: 1.5 }}>
-              {caseInfo.formulaDesc}
-            </p>
+            <FormulaCard caseInfo={caseInfo} />
           </div>
 
           {/* Allocation cards */}

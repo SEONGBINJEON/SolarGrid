@@ -148,7 +148,6 @@ function DashboardApp({ onLogout }) {
     jeonnamDemo,
     jeonnamTimeData,
     loading,
-    plants,
     regionRiskSummary,
     sectorCouplingCases,
     shinanPlants,
@@ -375,7 +374,6 @@ function DashboardApp({ onLogout }) {
                 jeonnamTimeData={jeonnamTimeData}
                 loading={loading}
                 onPlantDetailOpen={openPlantDetail}
-                plants={plants}
                 regionRiskSummary={regionRiskSummary}
                 selectedDate={effectiveDate}
                 selectedHour={effectiveSelectedHour}

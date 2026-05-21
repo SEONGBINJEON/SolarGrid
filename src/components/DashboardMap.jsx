@@ -138,7 +138,11 @@ function DashboardMap({
             />
           ))
         : items.map((region) => (
-            <RegionMarker key={region.id} onSelect={onRegionSelect} region={region} />
+            <RegionMarker
+              key={`${region.id}-${viewLevel}-${selectedHour}-${region.solar_generation}-${region.temperature}-${region.risk_level}`}
+              onSelect={onRegionSelect}
+              region={region}
+            />
           ))}
     </MapContainer>
   )

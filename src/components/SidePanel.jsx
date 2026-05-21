@@ -17,6 +17,9 @@ import {
 import ForecastChart from './ForecastChart'
 import RiskBadge from './RiskBadge'
 
+const NATIONAL_PLANT_COUNT = 203777
+const NATIONAL_SOLAR_CAPACITY_MW = 31530
+
 function formatHour(hour) {
   return `${String(hour).padStart(2, '0')}:00`
 }
@@ -130,7 +133,6 @@ function RiskList({ items, title }) {
 
 function NationalOverview({
   forecastRows,
-  plants,
   selectedDate,
   selectedHour,
   selectedRegion,
@@ -143,10 +145,6 @@ function NationalOverview({
   )
   const totalGeneration = currentRows.reduce(
     (sum, region) => sum + (Number(region.solar_generation) || 0),
-    0,
-  )
-  const totalCapacity = currentRows.reduce(
-    (sum, region) => sum + (Number(region.solar_capacity) || 0),
     0,
   )
   const maxRiskPoint = sortByRiskScore(currentRows)[0]
@@ -165,8 +163,8 @@ function NationalOverview({
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Metric label="표시 지역 수" value={`${currentRows.length}개`} />
-        <Metric label="전체 발전소 수" value={`${plants.length}개`} />
-        <Metric label="전체 설비용량" value={formatValue(totalCapacity, 'MW', 0)} />
+        <Metric label="전체 발전소 수" value={`${NATIONAL_PLANT_COUNT.toLocaleString()}개`} />
+        <Metric label="전체 설비용량" value={formatValue(NATIONAL_SOLAR_CAPACITY_MW, 'MW', 0)} />
         <Metric label="총 예측 발전량" value={formatValue(totalGeneration, 'MWh')} />
       </div>
 
@@ -431,7 +429,6 @@ function SidePanel({
   jeonnamTimeData,
   loading,
   onPlantDetailOpen,
-  plants,
   sectorCouplingCases,
   shinanPlants,
   selectedDate,
@@ -487,7 +484,6 @@ function SidePanel({
         ) : viewLevel === 'national' ? (
           <NationalOverview
             forecastRows={forecastRows}
-            plants={plants}
             selectedDate={selectedDate}
             selectedHour={selectedHour}
             selectedRegion={selectedRegion}

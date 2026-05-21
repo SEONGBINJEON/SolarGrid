@@ -33,7 +33,6 @@ const numericColumns = new Set([
   'peak_hour',
   'permitted_capacity_kw',
   'annual_generation_kwh',
-  '시간',
   '출력제한_위험점수',
   '온도_C',
   '발전소_예측발전량_MWh',
