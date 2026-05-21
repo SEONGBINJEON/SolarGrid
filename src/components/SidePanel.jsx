@@ -9,6 +9,11 @@ import {
   getJeonnamRiskWindow,
   getSelectedCitySummary,
 } from '../utils/jeonnamTimeUtils'
+import {
+  getCase1Rows,
+  getDemoPlantMetrics,
+  isDemoPlant,
+} from '../utils/sectorCouplingUtils'
 import ForecastChart from './ForecastChart'
 import RiskBadge from './RiskBadge'
 
@@ -317,7 +322,13 @@ function SinanOverview({ selectedHour, shinanPlants, sinanRiskWindow, sinanSumma
   )
 }
 
-function PlantDetail({ onPlantDetailOpen, plant }) {
+function PlantDetail({ onPlantDetailOpen, plant, sectorCase1Rows, selectedHour }) {
+  const demoMetrics = getDemoPlantMetrics(plant, sectorCase1Rows, selectedHour)
+  const riskLevel = demoMetrics?.risk_level ?? plant.risk_level
+  const riskScore = demoMetrics?.risk_score ?? plant.risk_score
+  const forecastGeneration =
+    demoMetrics?.forecast_mwh ?? plant.solar_generation ?? plant.annual_generation_kwh
+  const curtailmentTime = demoMetrics?.curtailment_window ?? plant.curtailment_time ?? '-'
   const isShinanPlant =
     plant.sub_region === '신안군' ||
     plant.township !== undefined ||
@@ -336,7 +347,7 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
               {plant.plant_name}
             </h2>
           </div>
-          <RiskBadge level={plant.risk_level} />
+          <RiskBadge level={riskLevel} />
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -347,11 +358,11 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
           />
           <Metric
             label="예측 발전량"
-            value={formatValue(plant.solar_generation ?? plant.annual_generation_kwh, 'MWh')}
+            value={formatValue(forecastGeneration, 'MWh')}
           />
-          <Metric label="위험도 점수" value={`${formatRiskScore(plant.risk_score)}점`} />
-          <Metric label="위험도 등급" value={<RiskBadge level={plant.risk_level} />} />
-          <Metric label="출력제어 예상" value={plant.curtailment_time || '-'} />
+          <Metric label="위험도 점수" value={`${formatRiskScore(riskScore)}점`} />
+          <Metric label="위험도 등급" value={<RiskBadge level={riskLevel} />} />
+          <Metric label="출력제어 예상" value={curtailmentTime} />
         </div>
 
         <div className="panel-section mt-4">
@@ -421,6 +432,7 @@ function SidePanel({
   loading,
   onPlantDetailOpen,
   plants,
+  sectorCouplingCases,
   shinanPlants,
   selectedDate,
   selectedHour,
@@ -429,16 +441,25 @@ function SidePanel({
   sinanChartRows,
   viewLevel,
 }) {
+  const sectorCase1Rows = getCase1Rows(sectorCouplingCases)
+  const selectedPlantCase1Rows =
+    selectedPlant && isDemoPlant(selectedPlant) ? sectorCase1Rows : []
   const sinanSummary = getSelectedCitySummary(jeonnamTimeData, '신안군', selectedHour)
   const sinanRiskWindow = getJeonnamRiskWindow(getCityRows(jeonnamTimeData, '신안군'))
   const customChartRows =
-    viewLevel === 'jeonnam'
+    selectedPlantCase1Rows.length > 0
+      ? selectedPlantCase1Rows
+      : viewLevel === 'jeonnam'
       ? jeonnamChartRows
       : viewLevel === 'sinan' || selectedPlant
         ? sinanChartRows
         : undefined
   const customChartUnit =
-    viewLevel === 'jeonnam' || viewLevel === 'sinan' || selectedPlant ? 'MW' : 'MWh'
+    selectedPlantCase1Rows.length > 0
+      ? 'MWh'
+      : viewLevel === 'jeonnam' || viewLevel === 'sinan' || selectedPlant
+        ? 'MW'
+        : 'MWh'
 
   return (
     <div className="side-panel-shell">
@@ -457,7 +478,12 @@ function SidePanel({
         )}
 
         {selectedPlant ? (
-          <PlantDetail onPlantDetailOpen={onPlantDetailOpen} plant={selectedPlant} />
+          <PlantDetail
+            onPlantDetailOpen={onPlantDetailOpen}
+            plant={selectedPlant}
+            sectorCase1Rows={sectorCase1Rows}
+            selectedHour={selectedHour}
+          />
         ) : viewLevel === 'national' ? (
           <NationalOverview
             forecastRows={forecastRows}

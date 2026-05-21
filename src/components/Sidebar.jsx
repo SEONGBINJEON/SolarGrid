@@ -1,4 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  DEMO_PLANT_NAME,
+  matchesDemoPlantSearch,
+  normalizeSearchText,
+} from '../utils/sectorCouplingUtils'
 
 const NAV_ITEMS = [
   { id: 'forecast', label: 'Forecast Map' },
@@ -101,7 +106,7 @@ function Sidebar({
   const [activeIndex, setActiveIndex] = useState(0)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const searchWrapRef = useRef(null)
-  const normalizedSearch = search.trim().toLowerCase()
+  const normalizedSearch = normalizeSearchText(search)
   const searchResults = useMemo(() => {
     if (normalizedSearch.length === 0) {
       return []
@@ -111,10 +116,18 @@ function Sidebar({
       .filter(
         (plant) =>
           hasValidCoordinate(plant) &&
-          String(plant.plant_name ?? '').toLowerCase().includes(normalizedSearch),
+          normalizeSearchText(plant.plant_name).includes(normalizedSearch),
       )
+      .sort((a, b) => {
+        if (matchesDemoPlantSearch(search)) {
+          if (a.plant_name === DEMO_PLANT_NAME) return -1
+          if (b.plant_name === DEMO_PLANT_NAME) return 1
+        }
+
+        return 0
+      })
       .slice(0, 8)
-  }, [normalizedSearch, searchPlants])
+  }, [normalizedSearch, search, searchPlants])
   const showNoResults =
     isSearchOpen && normalizedSearch.length > 0 && searchResults.length === 0
   const selectedResultIndex =

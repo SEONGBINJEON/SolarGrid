@@ -150,6 +150,7 @@ function DashboardApp({ onLogout }) {
     loading,
     plants,
     regionRiskSummary,
+    sectorCouplingCases,
     shinanPlants,
   } = useSolarData()
 
@@ -380,6 +381,7 @@ function DashboardApp({ onLogout }) {
                 selectedHour={effectiveSelectedHour}
                 selectedPlant={selectedPlant}
                 selectedRegion={effectiveSelectedRegion}
+                sectorCouplingCases={sectorCouplingCases}
                 shinanPlants={shinanPlants}
                 sinanChartRows={sinanChartRows}
                 viewLevel={viewLevel}
@@ -454,7 +456,9 @@ function DashboardApp({ onLogout }) {
             onForecastOpen={openForecastMap}
             onSectorCouplingOpen={openSectorCoupling}
             selectedDate={effectiveDate}
+            selectedHour={effectiveSelectedHour}
             selectedPlant={selectedPlant}
+            sectorCouplingCases={sectorCouplingCases}
           />
         )}
 

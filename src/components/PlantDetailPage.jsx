@@ -1,5 +1,20 @@
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { couplingCandidates } from '../data/sectorCouplingDummyData'
 import { formatRiskScore } from '../utils/riskUtils'
+import {
+  getCase1Rows,
+  getDemoPlantMetrics,
+  isDemoPlant,
+} from '../utils/sectorCouplingUtils'
 import ForecastChart from './ForecastChart'
 import RiskBadge from './RiskBadge'
 
@@ -14,11 +29,16 @@ function formatCapacity(plant) {
   return Number.isFinite(n) ? `${n.toLocaleString()} kW` : String(v)
 }
 
+function formatGenerationValue(value) {
+  const n = Number(value)
+  return Number.isFinite(n)
+    ? `${n.toLocaleString(undefined, { maximumFractionDigits: 1 })} MWh`
+    : '-'
+}
+
 function formatGeneration(plant) {
   const v = plant.solar_generation ?? plant.annual_generation_kwh
-  if (!v) return '-'
-  const n = Number(v)
-  return Number.isFinite(n) ? `${n.toLocaleString()} MWh` : String(v)
+  return formatGenerationValue(v)
 }
 
 function getTownship(plant) {
@@ -34,40 +54,113 @@ function DetailMetric({ label, value }) {
   )
 }
 
-const TYPE_ICONS = {
-  ESS: '🔋',
-  'EV Charging': '⚡',
-  P2H: '🔥',
-  Hydrogen: '⚗',
-  'Industrial Load': '🏭',
+const TYPE_LABELS = {
+  ESS: 'ESS',
+  EV: 'EV',
+  P2H: 'P2H',
 }
 
 function CandidateCard({ candidate }) {
-  const icon = TYPE_ICONS[candidate.type] || '●'
   return (
     <div className="coupling-candidate-item">
       <div
         className="coupling-type-icon"
-        style={{ background: `${candidate.color}18` }}
+        style={{ background: `${candidate.color}18`, color: candidate.color }}
       >
-        <span style={{ fontSize: 18 }}>{icon}</span>
+        <span style={{ fontSize: 11, fontWeight: 800 }}>{TYPE_LABELS[candidate.type]}</span>
       </div>
       <div>
         <p className="coupling-candidate-name">{candidate.name}</p>
         <p className="coupling-candidate-meta">
-          {candidate.type} · {candidate.distance} · {candidate.capacity}
+          {candidate.type} · {candidate.description}
         </p>
         <p className="coupling-candidate-meta" style={{ marginTop: 2 }}>
-          {candidate.reason}
+          {candidate.location}
         </p>
       </div>
-      <div
-        className="coupling-candidate-score"
-        style={{ color: candidate.color }}
-      >
-        {candidate.score}
+    </div>
+  )
+}
+
+function SurplusTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) {
+    return null
+  }
+
+  const point = payload[0].payload
+
+  return (
+    <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-xl">
+      <p className="mb-2 text-[13px] text-slate-500">{formatHour(label)}</p>
+      <p className="text-[15px] font-semibold text-slate-950">
+        {Number(point.surplus_mwh).toLocaleString(undefined, {
+          maximumFractionDigits: 1,
+        })}{' '}
+        MWh
+      </p>
+      <div className="mt-2 flex items-center gap-2 text-[13px] text-slate-600">
+        <span>위험도 점수 {formatRiskScore(point.risk_score)}점</span>
+        <RiskBadge level={point.risk_level} />
       </div>
     </div>
+  )
+}
+
+function getSurplusBarColor(point) {
+  if (Number(point.surplus_mwh) <= 0) {
+    return '#e2e8f0'
+  }
+
+  return point.risk_level === '위험' ? '#ef4444' : '#f97316'
+}
+
+function SurplusBarChart({ data }) {
+  return (
+    <section className="mt-6">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
+            시간대별 추정 잉여전력
+          </h3>
+          <p className="mt-1 text-[12px] text-slate-500">
+            추정 잉여전력이 발생하는 주의 이상 시간대를 중심으로 표시
+          </p>
+        </div>
+        <span className="text-[12px] font-medium text-slate-500">MWh</span>
+      </div>
+
+      {data.length === 0 ? (
+        <div className="flex h-[210px] items-center justify-center rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-[12px] text-slate-500">
+          추정 잉여전력 데이터가 없습니다.
+        </div>
+      ) : (
+        <div className="h-[210px] rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+          <ResponsiveContainer height="100%" width="100%">
+            <BarChart data={data}>
+              <CartesianGrid stroke="rgba(148, 163, 184, 0.18)" vertical={false} />
+              <XAxis
+                axisLine={false}
+                dataKey="hour"
+                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                tickFormatter={formatHour}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                tickLine={false}
+              />
+              <Tooltip content={<SurplusTooltip />} />
+              <Bar dataKey="surplus_mwh" radius={[6, 6, 0, 0]}>
+                {data.map((point) => (
+                  <Cell fill={getSurplusBarColor(point)} key={point.hour} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -94,14 +187,35 @@ function EmptyState({ onForecastOpen }) {
   )
 }
 
-function PlantDetailPage({ forecastRows, onForecastOpen, onSectorCouplingOpen, selectedDate, selectedPlant }) {
+function PlantDetailPage({
+  forecastRows,
+  onForecastOpen,
+  onSectorCouplingOpen,
+  sectorCouplingCases,
+  selectedDate,
+  selectedHour,
+  selectedPlant,
+}) {
   if (!selectedPlant) {
     return <EmptyState onForecastOpen={onForecastOpen} />
   }
 
   const township = getTownship(selectedPlant)
-  const curtailmentTime = selectedPlant.curtailment_time || '-'
-  const peakHour = selectedPlant.peak_hour ? formatHour(selectedPlant.peak_hour) : '-'
+  const case1Rows = getCase1Rows(sectorCouplingCases)
+  const usesDemoData = isDemoPlant(selectedPlant) && case1Rows.length > 0
+  const demoMetrics = getDemoPlantMetrics(selectedPlant, case1Rows, selectedHour)
+  const curtailmentTime =
+    demoMetrics?.curtailment_window ?? selectedPlant.curtailment_time ?? '-'
+  const peakHour = demoMetrics?.peak_hour
+    ? formatHour(demoMetrics.peak_hour)
+    : selectedPlant.peak_hour
+      ? formatHour(selectedPlant.peak_hour)
+      : '-'
+  const riskLevel = demoMetrics?.risk_level ?? selectedPlant.risk_level
+  const riskScore = demoMetrics?.risk_score ?? selectedPlant.risk_score
+  const generation = demoMetrics
+    ? formatGenerationValue(demoMetrics.forecast_mwh)
+    : formatGeneration(selectedPlant)
 
   return (
     <div className="plant-detail-shell">
@@ -109,7 +223,6 @@ function PlantDetailPage({ forecastRows, onForecastOpen, onSectorCouplingOpen, s
         ← Forecast Map으로 돌아가기
       </button>
 
-      {/* Header */}
       <div className="plant-detail-header">
         <div>
           <p className="plant-detail-eyebrow">Plant Detail</p>
@@ -121,22 +234,19 @@ function PlantDetailPage({ forecastRows, onForecastOpen, onSectorCouplingOpen, s
               : ''}
           </p>
         </div>
-        <RiskBadge level={selectedPlant.risk_level} />
+        <RiskBadge level={riskLevel} />
       </div>
 
-      {/* Metrics */}
       <div className="plant-detail-metrics">
         <DetailMetric label="설비용량" value={formatCapacity(selectedPlant)} />
-        <DetailMetric label="예측 발전량" value={formatGeneration(selectedPlant)} />
-        <DetailMetric label="위험도 점수" value={`${formatRiskScore(selectedPlant.risk_score)}점`} />
-        <DetailMetric label="위험도 등급" value={<RiskBadge level={selectedPlant.risk_level} />} />
+        <DetailMetric label="예측 발전량" value={generation} />
+        <DetailMetric label="위험도 점수" value={`${formatRiskScore(riskScore)}점`} />
+        <DetailMetric label="위험도 등급" value={<RiskBadge level={riskLevel} />} />
         <DetailMetric label="출력제어 위험 시간대" value={curtailmentTime} />
         <DetailMetric label="피크 시간" value={peakHour} />
       </div>
 
-      {/* Main two-column */}
       <div className="plant-detail-main">
-        {/* Left: forecast chart */}
         <div className="plant-detail-card">
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: 2 }}>
             발전량 예측
@@ -149,8 +259,11 @@ function PlantDetailPage({ forecastRows, onForecastOpen, onSectorCouplingOpen, s
             selectedDate={selectedDate}
             selectedPlant={selectedPlant}
             selectedRegion={null}
+            timeSeriesRows={usesDemoData ? case1Rows : undefined}
+            unit="MWh"
             viewLevel="sinan"
           />
+          <SurplusBarChart data={usesDemoData ? case1Rows : []} />
 
           <div style={{ marginTop: 20, padding: '14px 16px', border: '1px solid #fde68a', borderRadius: 10, background: '#fffbeb' }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -160,12 +273,11 @@ function PlantDetailPage({ forecastRows, onForecastOpen, onSectorCouplingOpen, s
               {curtailmentTime}
             </p>
             <p style={{ fontSize: 12, color: '#92400e', marginTop: 6, lineHeight: 1.6 }}>
-              해당 시간대에 잉여 전력 발생이 예상됩니다. 아래 섹터 커플링 후보를 통해 잉여 전력을 활용할 수 있습니다.
+              Case 1 기준으로 추정 잉여전력이 0보다 큰 시간대를 출력제어 위험 시간대로 표시합니다.
             </p>
           </div>
         </div>
 
-        {/* Right: coupling candidates */}
         <div className="plant-detail-card">
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: 2 }}>
             Sector Coupling

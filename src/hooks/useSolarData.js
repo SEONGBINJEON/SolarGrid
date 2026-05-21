@@ -5,6 +5,10 @@ import {
   jeonnamRegions,
   sinanPlants,
 } from '../data/dummyData'
+import {
+  DEMO_PLANT_NAME,
+  splitSectorCouplingCases,
+} from '../utils/sectorCouplingUtils'
 
 const numericColumns = new Set([
   'hour',
@@ -29,6 +33,19 @@ const numericColumns = new Set([
   'peak_hour',
   'permitted_capacity_kw',
   'annual_generation_kwh',
+  '시간',
+  '출력제한_위험점수',
+  '온도_C',
+  '발전소_예측발전량_MWh',
+  '발전소_추정잉여전력_MWh',
+  'ESS_수용가능량_MWh',
+  'EV_수용가능량_MWh',
+  'P2H_수용가능량_MWh',
+  'ESS_분배량_MWh',
+  'EV_분배량_MWh',
+  'P2H_분배량_MWh',
+  '잔여_출력제한_MWh',
+  '분배후_활용률_%',
 ])
 
 export const regionCoordinates = {
@@ -133,7 +150,7 @@ function normalizePlants(rows) {
 }
 
 function normalizeShinanPlants(rows) {
-  return rows.map((plant) => ({
+  const normalizedPlants = rows.map((plant) => ({
     ...plant,
     region: plant.region ?? '전라남도',
     sub_region: plant.sub_region ?? '신안군',
@@ -143,6 +160,12 @@ function normalizeShinanPlants(rows) {
     permitted_capacity_kw: plant.permitted_capacity_kw ?? plant.solar_capacity,
     annual_generation_kwh: plant.annual_generation_kwh,
   }))
+
+  return normalizedPlants.sort((a, b) => {
+    if (a.plant_name === DEMO_PLANT_NAME) return -1
+    if (b.plant_name === DEMO_PLANT_NAME) return 1
+    return 0
+  })
 }
 
 function parseKoreanHour(value) {
@@ -323,6 +346,11 @@ function useSolarData() {
   const [plants, setPlants] = useState(fallbackData.plants)
   const [shinanPlants, setShinanPlants] = useState([])
   const [jeonnamTimeData, setJeonnamTimeData] = useState(fallbackData.jeonnamTimeData)
+  const [sectorCouplingCases, setSectorCouplingCases] = useState({
+    case1: [],
+    case2: [],
+    case3: [],
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -335,6 +363,7 @@ function useSolarData() {
         plantsResult,
         shinanPlantsResult,
         jeonnamTimeResult,
+        sectorCouplingResult,
       ] =
         await Promise.allSettled([
           parseCsv('/data/future_curtailment_risk_result.csv', [
@@ -409,6 +438,25 @@ function useSolarData() {
             'risk_score',
             'risk_level',
           ]),
+          parseCsv('/data/sector_coupling.csv', [
+            '예측일자',
+            '시간',
+            '출력제한_위험_등급',
+            '출력제한_위험점수',
+            '온도_C',
+            '발전소_예측발전량_MWh',
+            '발전소_추정잉여전력_MWh',
+            '적용순위',
+            'ESS_제한_방식',
+            'ESS_수용가능량_MWh',
+            'EV_수용가능량_MWh',
+            'P2H_수용가능량_MWh',
+            'ESS_분배량_MWh',
+            'EV_분배량_MWh',
+            'P2H_분배량_MWh',
+            '잔여_출력제한_MWh',
+            '분배후_활용률_%',
+          ]),
         ])
 
       if (!isMounted) {
@@ -439,6 +487,10 @@ function useSolarData() {
         jeonnamTimeResult.status === 'fulfilled'
           ? normalizeJeonnamTimeData(jeonnamTimeResult.value)
           : fallbackData.jeonnamTimeData
+      const nextSectorCouplingCases =
+        sectorCouplingResult.status === 'fulfilled'
+          ? splitSectorCouplingCases(sectorCouplingResult.value)
+          : { case1: [], case2: [], case3: [] }
 
       setForecastRows(nextForecastRows)
       setRegionRiskSummary(nextRegionRiskSummary)
@@ -446,13 +498,15 @@ function useSolarData() {
       setPlants(nextPlants)
       setShinanPlants(nextShinanPlants)
       setJeonnamTimeData(nextJeonnamTimeData)
+      setSectorCouplingCases(nextSectorCouplingCases)
 
       if (
         forecastResult.status === 'rejected' ||
         jeonnamResult.status === 'rejected' ||
         plantsResult.status === 'rejected' ||
         shinanPlantsResult.status === 'rejected' ||
-        jeonnamTimeResult.status === 'rejected'
+        jeonnamTimeResult.status === 'rejected' ||
+        sectorCouplingResult.status === 'rejected'
       ) {
         setError(new Error('일부 CSV 로딩에 실패해 fallback 데이터를 표시하고 있습니다.'))
       } else {
@@ -487,6 +541,7 @@ function useSolarData() {
     plants,
     shinanPlants,
     jeonnamTimeData,
+    sectorCouplingCases,
     availableDates,
     availableHours,
   }

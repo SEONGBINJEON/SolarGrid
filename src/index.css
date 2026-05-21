@@ -1303,10 +1303,11 @@ input {
 
 .map-overlay-panel .metric-card > p:last-child {
   margin-top: 6px !important;
-  font-size: 17px !important;
-  line-height: 1.12;
-  letter-spacing: -0.04em;
-  white-space: nowrap;
+  font-size: 16px !important;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .map-overlay-panel .grid.grid-cols-2 {
@@ -1667,7 +1668,7 @@ input {
 
 .coupling-candidate-item {
   display: grid;
-  grid-template-columns: 36px 1fr auto;
+  grid-template-columns: 36px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
