@@ -2,11 +2,22 @@ import L from 'leaflet'
 import { Marker } from 'react-leaflet'
 import { getRiskClassName } from '../utils/riskUtils'
 
+function formatMarkerNumber(value) {
+  const numberValue = Number(value)
+
+  if (!Number.isFinite(numberValue)) {
+    return value ?? '-'
+  }
+
+  return Number.isInteger(numberValue) ? numberValue.toLocaleString() : numberValue.toFixed(1)
+}
+
 function RegionMarker({ region, onSelect }) {
   const tempHtml =
     region.temperature != null
-      ? `<span class="marker-temp">&nbsp;·&nbsp;${region.temperature}°C</span>`
+      ? `<span class="marker-temp">&nbsp;·&nbsp;${formatMarkerNumber(region.temperature)}°C</span>`
       : ''
+  const generationUnit = region.generation_unit ?? 'MWh'
 
   const icon = L.divIcon({
     className: '',
@@ -17,8 +28,8 @@ function RegionMarker({ region, onSelect }) {
           <span class="risk-chip ${getRiskClassName(region.risk_level)}">${region.risk_level}</span>
         </div>
         <div class="marker-bottom">
-          <span class="marker-value">${region.solar_generation}</span>
-          <span class="marker-unit">MWh</span>
+          <span class="marker-value">${formatMarkerNumber(region.solar_generation)}</span>
+          <span class="marker-unit">${generationUnit}</span>
           ${tempHtml}
         </div>
       </button>

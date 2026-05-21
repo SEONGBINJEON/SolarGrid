@@ -7,6 +7,11 @@ import Sidebar from './components/Sidebar'
 import SidePanel from './components/SidePanel'
 import useSolarData from './hooks/useSolarData'
 import LoginPage from './pages/LoginPage'
+import {
+  buildJeonnamAggregateRows,
+  buildJeonnamCityRows,
+  getCityRows,
+} from './utils/jeonnamTimeUtils'
 
 const AUTH_STORAGE_KEY = 'solargrid-authenticated'
 
@@ -101,9 +106,9 @@ function TimeControl({ dataHourRange, hourSequence, onHourChange, selectedHour }
         {isPlaying ? 'Ⅱ' : '▶'}
       </button>
       <input
-        className="time-slider accent-sky-400"
-        max="24"
-        min="1"
+        className="time-slider"
+        max={hourSequence[hourSequence.length - 1] ?? 24}
+        min={hourSequence[0] ?? 1}
         onChange={handleHourChange}
         step="0.01"
         type="range"
@@ -141,6 +146,7 @@ function DashboardApp({ onLogout }) {
     error,
     forecastRows,
     jeonnamDemo,
+    jeonnamTimeData,
     loading,
     plants,
     regionRiskSummary,
@@ -152,21 +158,47 @@ function DashboardApp({ onLogout }) {
       ? selectedDate
       : availableDates[0] ?? ''
 
-  const hourSequence = useMemo(
+  const jeonnamHourSequence = useMemo(
+    () =>
+      jeonnamTimeData.length > 0
+        ? [...new Set(jeonnamTimeData.map((row) => row.hour))].sort((a, b) => a - b)
+        : Array.from({ length: 24 }, (_, index) => index),
+    [jeonnamTimeData],
+  )
+  const nationalHourSequence = useMemo(
     () =>
       availableHours.length > 0
         ? [...availableHours].sort((a, b) => a - b)
         : Array.from({ length: 24 }, (_, index) => index + 1),
     [availableHours],
   )
+  const hourSequence = viewLevel === 'national' ? nationalHourSequence : jeonnamHourSequence
+  const effectiveSelectedHour =
+    hourSequence.length === 0 || hourSequence.includes(selectedHour)
+      ? selectedHour
+      : hourSequence.reduce((nearest, hour) =>
+          Math.abs(hour - selectedHour) < Math.abs(nearest - selectedHour) ? hour : nearest,
+        )
   const dataHourRange = `${hourSequence[0]}~${hourSequence[hourSequence.length - 1]}`
+  const jeonnamDisplayRows = useMemo(
+    () => buildJeonnamCityRows(jeonnamDemo, jeonnamTimeData, effectiveSelectedHour),
+    [jeonnamDemo, jeonnamTimeData, effectiveSelectedHour],
+  )
+  const jeonnamChartRows = useMemo(
+    () => buildJeonnamAggregateRows(jeonnamTimeData),
+    [jeonnamTimeData],
+  )
+  const sinanChartRows = useMemo(
+    () => getCityRows(jeonnamTimeData, '신안군'),
+    [jeonnamTimeData],
+  )
 
   const currentNationalRows = useMemo(
     () =>
       forecastRows.filter(
-        (row) => row.date === effectiveDate && row.hour === selectedHour,
+        (row) => row.date === effectiveDate && row.hour === effectiveSelectedHour,
       ),
-    [forecastRows, effectiveDate, selectedHour],
+    [forecastRows, effectiveDate, effectiveSelectedHour],
   )
 
   const effectiveSelectedRegion =
@@ -303,11 +335,11 @@ function DashboardApp({ onLogout }) {
           <div className="forecast-map-shell" ref={mapShellRef}>
             <DashboardMap
               forecastRows={forecastRows}
-              jeonnamDemo={jeonnamDemo}
+              jeonnamDemo={jeonnamDisplayRows}
               onPlantSelect={handleSelectPlant}
               onRegionSelect={handleRegionSelect}
               selectedDate={effectiveDate}
-              selectedHour={selectedHour}
+              selectedHour={effectiveSelectedHour}
               selectedPlant={selectedPlant}
               shinanPlants={shinanPlants}
               viewLevel={viewLevel}
@@ -337,16 +369,19 @@ function DashboardApp({ onLogout }) {
               <SidePanel
                 error={error}
                 forecastRows={forecastRows}
-                jeonnamDemo={jeonnamDemo}
+                jeonnamChartRows={jeonnamChartRows}
+                jeonnamDemo={jeonnamDisplayRows}
+                jeonnamTimeData={jeonnamTimeData}
                 loading={loading}
                 onPlantDetailOpen={openPlantDetail}
                 plants={plants}
                 regionRiskSummary={regionRiskSummary}
                 selectedDate={effectiveDate}
-                selectedHour={selectedHour}
+                selectedHour={effectiveSelectedHour}
                 selectedPlant={selectedPlant}
                 selectedRegion={effectiveSelectedRegion}
                 shinanPlants={shinanPlants}
+                sinanChartRows={sinanChartRows}
                 viewLevel={viewLevel}
               />
             </div>
@@ -379,7 +414,7 @@ function DashboardApp({ onLogout }) {
                 dataHourRange={dataHourRange}
                 hourSequence={hourSequence}
                 onHourChange={setSelectedHour}
-                selectedHour={selectedHour}
+                selectedHour={effectiveSelectedHour}
               />
 
               <div className="ctrl-divider" />

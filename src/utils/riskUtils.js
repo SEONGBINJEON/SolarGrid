@@ -1,29 +1,31 @@
 export const riskClassNames = {
+  낮음: 'risk-low',
+  매우높음: 'risk-critical',
+  보통: 'risk-normal',
+  위험: 'risk-critical',
   정상: 'risk-low',
   주의: 'risk-high',
-  위험: 'risk-critical',
-  낮음: 'risk-low',
-  보통: 'risk-normal',
   높음: 'risk-high',
   '매우 높음': 'risk-critical',
 }
 
 export const riskOrder = {
+  낮음: 1,
+  보통: 2,
   정상: 1,
   주의: 2,
   위험: 3,
-  낮음: 1,
-  보통: 2,
   높음: 3,
+  매우높음: 4,
   '매우 높음': 4,
 }
 
 export function getRiskClassName(level) {
-  return riskClassNames[level] ?? riskClassNames.낮음
+  return riskClassNames[level] ?? riskClassNames.정상
 }
 
 export function getRiskMessage(level) {
-  if (level === '위험' || level === '매우 높음') {
+  if (level === '위험' || level === '매우 높음' || level === '매우높음') {
     return '출력제어 가능성이 매우 높습니다. 계통 수용 여유를 즉시 확인하세요.'
   }
 
@@ -39,22 +41,28 @@ export function getRiskMessage(level) {
 }
 
 export function sortByRiskScore(items) {
-  return [...items].sort((a, b) => b.risk_score - a.risk_score)
+  return [...items].sort((a, b) => (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
 }
 
 export function toRiskPercent(score) {
-  if (score == null || Number.isNaN(score)) {
+  if (score == null || Number.isNaN(Number(score))) {
     return 0
   }
 
-  return score <= 1 ? score * 100 : score
+  const numericScore = Number(score)
+  return numericScore <= 1 ? numericScore * 100 : numericScore
 }
 
 export function formatRiskScore(score) {
-  if (score == null || Number.isNaN(score)) {
+  if (score == null || Number.isNaN(Number(score))) {
     return '-'
   }
 
-  const normalized = toRiskPercent(score)
-  return score <= 1 ? normalized.toFixed(1) : Number.isInteger(normalized) ? normalized : normalized.toFixed(1)
+  const numericScore = Number(score)
+  const normalized = toRiskPercent(numericScore)
+  return numericScore <= 1
+    ? normalized.toFixed(1)
+    : Number.isInteger(normalized)
+      ? normalized
+      : normalized.toFixed(1)
 }

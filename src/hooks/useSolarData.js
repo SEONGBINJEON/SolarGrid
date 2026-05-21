@@ -145,6 +145,30 @@ function normalizeShinanPlants(rows) {
   }))
 }
 
+function parseKoreanHour(value) {
+  const match = String(value ?? '').match(/\d+/)
+  return match ? Number(match[0]) : Number.NaN
+}
+
+function safeNumber(value, fallback = 0) {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : fallback
+}
+
+function normalizeJeonnamTimeData(rows) {
+  return rows
+    .map((row) => ({
+      city: String(row.도시 ?? '').trim(),
+      cumulative_generation: safeNumber(row.누적발전량),
+      hour: parseKoreanHour(row.시간),
+      solar_generation: safeNumber(row.발전량),
+      temperature: safeNumber(row.기온, null),
+      risk_score: safeNumber(row.risk_score, null),
+      risk_level: String(row.risk_level ?? '').trim() || null,
+    }))
+    .filter((row) => row.city && Number.isFinite(row.hour))
+}
+
 function classifyRiskLevel(level) {
   if (level === '위험' || level === '매우 높음') {
     return '위험'
@@ -285,6 +309,7 @@ const fallbackData = {
       peak_hour: parseHour(plant.peak_hour),
     })),
   ),
+  jeonnamTimeData: [],
 }
 
 function useSolarData() {
@@ -297,12 +322,20 @@ function useSolarData() {
   const [jeonnamDemo, setJeonnamDemo] = useState(fallbackData.jeonnamDemo)
   const [plants, setPlants] = useState(fallbackData.plants)
   const [shinanPlants, setShinanPlants] = useState([])
+  const [jeonnamTimeData, setJeonnamTimeData] = useState(fallbackData.jeonnamTimeData)
 
   useEffect(() => {
     let isMounted = true
 
     async function loadSolarData() {
-      const [forecastResult, summaryResult, jeonnamResult, plantsResult, shinanPlantsResult] =
+      const [
+        forecastResult,
+        summaryResult,
+        jeonnamResult,
+        plantsResult,
+        shinanPlantsResult,
+        jeonnamTimeResult,
+      ] =
         await Promise.allSettled([
           parseCsv('/data/future_curtailment_risk_result.csv', [
           'date',
@@ -367,6 +400,15 @@ function useSolarData() {
             'curtailment_time',
             'address',
           ]),
+          parseCsv('/data/time_data.csv', [
+            '시간',
+            '도시',
+            '발전량',
+            '누적발전량',
+            '기온',
+            'risk_score',
+            'risk_level',
+          ]),
         ])
 
       if (!isMounted) {
@@ -393,18 +435,24 @@ function useSolarData() {
         summaryResult.status === 'fulfilled'
           ? summaryResult.value
           : summarizeForecastRows(nextForecastRows)
+      const nextJeonnamTimeData =
+        jeonnamTimeResult.status === 'fulfilled'
+          ? normalizeJeonnamTimeData(jeonnamTimeResult.value)
+          : fallbackData.jeonnamTimeData
 
       setForecastRows(nextForecastRows)
       setRegionRiskSummary(nextRegionRiskSummary)
       setJeonnamDemo(nextJeonnamDemo)
       setPlants(nextPlants)
       setShinanPlants(nextShinanPlants)
+      setJeonnamTimeData(nextJeonnamTimeData)
 
       if (
         forecastResult.status === 'rejected' ||
         jeonnamResult.status === 'rejected' ||
         plantsResult.status === 'rejected' ||
-        shinanPlantsResult.status === 'rejected'
+        shinanPlantsResult.status === 'rejected' ||
+        jeonnamTimeResult.status === 'rejected'
       ) {
         setError(new Error('일부 CSV 로딩에 실패해 fallback 데이터를 표시하고 있습니다.'))
       } else {
@@ -438,6 +486,7 @@ function useSolarData() {
     jeonnamDemo,
     plants,
     shinanPlants,
+    jeonnamTimeData,
     availableDates,
     availableHours,
   }

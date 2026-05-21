@@ -4,6 +4,11 @@ import {
   sortByRiskScore,
   toRiskPercent,
 } from '../utils/riskUtils'
+import {
+  getCityRows,
+  getJeonnamRiskWindow,
+  getSelectedCitySummary,
+} from '../utils/jeonnamTimeUtils'
 import ForecastChart from './ForecastChart'
 import RiskBadge from './RiskBadge'
 
@@ -15,11 +20,11 @@ function getPeakRiskWindow(rows) {
   const riskyRows = rows.filter((row) => toRiskPercent(row.risk_score) >= 70)
 
   if (riskyRows.length === 0) {
-    return '없음'
+    return '-'
   }
 
   const hours = riskyRows.map((row) => row.hour)
-  return `${formatHour(Math.min(...hours))} - ${formatHour(Math.max(...hours))}`
+  return `${formatHour(Math.min(...hours))}~${formatHour(Math.max(...hours))}`
 }
 
 function Metric({ label, value }) {
@@ -33,13 +38,21 @@ function Metric({ label, value }) {
   )
 }
 
-function formatNumber(value) {
+function formatNumber(value, fractionDigits = 1) {
   const numberValue = Number(value)
-  return Number.isFinite(numberValue) ? numberValue.toLocaleString() : '-'
+
+  if (!Number.isFinite(numberValue)) {
+    return '-'
+  }
+
+  return numberValue.toLocaleString(undefined, {
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: Number.isInteger(numberValue) ? 0 : fractionDigits,
+  })
 }
 
-function formatValue(value, unit = '') {
-  const formatted = formatNumber(value)
+function formatValue(value, unit = '', fractionDigits = 1) {
+  const formatted = formatNumber(value, fractionDigits)
   return formatted === '-' || unit === '' ? formatted : `${formatted} ${unit}`
 }
 
@@ -84,10 +97,35 @@ function ViewDetailAction({ onClick }) {
   )
 }
 
+function RiskList({ items, title }) {
+  return (
+    <section className="mt-5">
+      <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
+        {title}
+      </h3>
+      <div className="space-y-2">
+        {items.map((item) => (
+          <div
+            className="flex items-center justify-between rounded-[7px] border border-slate-100 bg-slate-50 px-3 py-2"
+            key={item.id ?? item.region ?? item.city}
+          >
+            <span className="text-[14px] font-semibold text-slate-900">
+              {item.region ?? item.city}
+            </span>
+            <div className="flex items-center gap-2 text-right text-[12px] font-medium leading-5 text-slate-500">
+              <span>{formatRiskScore(item.risk_score)}점</span>
+              <RiskBadge level={item.risk_level} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function NationalOverview({
   forecastRows,
   plants,
-  regionRiskSummary,
   selectedDate,
   selectedHour,
   selectedRegion,
@@ -99,23 +137,22 @@ function NationalOverview({
     (row) => row.date === selectedDate && row.region === selectedRegion?.region,
   )
   const totalGeneration = currentRows.reduce(
-    (sum, region) => sum + region.solar_generation,
+    (sum, region) => sum + (Number(region.solar_generation) || 0),
     0,
   )
-  const totalCapacity = currentRows.reduce((sum, region) => sum + region.solar_capacity, 0)
+  const totalCapacity = currentRows.reduce(
+    (sum, region) => sum + (Number(region.solar_capacity) || 0),
+    0,
+  )
   const maxRiskPoint = sortByRiskScore(currentRows)[0]
-  const topFive = [...regionRiskSummary]
-    .sort(
-      (a, b) =>
-        b['주의_위험_비율(%)'] - a['주의_위험_비율(%)'] ||
-        b['위험_비율(%)'] - a['위험_비율(%)'],
-    )
-    .slice(0, 5)
+  const topFive = sortByRiskScore(currentRows).slice(0, 5)
 
   return (
     <>
       <div>
-        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">선택 시점</p>
+        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
+          선택 시점
+        </p>
         <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-[-0.04em] text-slate-950">
           {selectedDate || '-'} {formatHour(selectedHour)}
         </h2>
@@ -124,8 +161,8 @@ function NationalOverview({
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Metric label="표시 지역 수" value={`${currentRows.length}개`} />
         <Metric label="전체 발전소 수" value={`${plants.length}개`} />
-        <Metric label="전체 설비용량" value={`${totalCapacity.toLocaleString()} MW`} />
-        <Metric label="총 예측 발전량" value={`${totalGeneration.toLocaleString()} MWh`} />
+        <Metric label="전체 설비용량" value={formatValue(totalCapacity, 'MW', 0)} />
+        <Metric label="총 예측 발전량" value={formatValue(totalGeneration, 'MWh')} />
       </div>
 
       <div className="panel-section mt-4 border-rose-100 bg-rose-50/60">
@@ -153,186 +190,127 @@ function NationalOverview({
             <Metric label="위험도" value={<RiskBadge level={selectedRegion.risk_level} />} />
             <Metric
               label="예측 발전량"
-              value={`${selectedRegion.solar_generation.toLocaleString()} MWh`}
+              value={formatValue(selectedRegion.solar_generation, 'MWh')}
             />
             <Metric
               label="설비용량"
-              value={`${selectedRegion.solar_capacity.toLocaleString()} MW`}
+              value={formatValue(selectedRegion.solar_capacity, 'MW')}
             />
             <Metric
               label="위험도 점수"
               value={`${formatRiskScore(selectedRegion.risk_score)}점`}
             />
-            <Metric
-              label="출력제어 예상"
-              value={getPeakRiskWindow(selectedRegionRows)}
-            />
+            <Metric label="출력제어 예상" value={getPeakRiskWindow(selectedRegionRows)} />
           </div>
         </section>
       )}
 
-      <section className="mt-5">
-        <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
-          위험 지역 TOP 5
-        </h3>
-        <div className="space-y-2">
-          {topFive.map((region) => (
-            <div
-              className="flex items-center justify-between rounded-[7px] border border-slate-100 bg-slate-50 px-3 py-2"
-              key={region.region}
-            >
-              <span className="text-[14px] font-semibold text-slate-900">{region.region}</span>
-              <div className="text-right text-[12px] font-medium leading-5 text-slate-500">
-                <p>주의+위험 {region['주의_위험_비율(%)'].toFixed(1)}%</p>
-                <p>위험 {region['위험_비율(%)'].toFixed(1)}%</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-5">
-        <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
-          지역별 위험 요약
-        </h3>
-        <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">
-          <table className="w-full border-collapse text-[12px]">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-3 py-3 text-left font-medium">지역</th>
-                <th className="px-3 py-3 text-right font-medium">정상</th>
-                <th className="px-3 py-3 text-right font-medium">주의</th>
-                <th className="px-3 py-3 text-right font-medium">위험</th>
-              </tr>
-            </thead>
-            <tbody>
-              {regionRiskSummary.map((region) => (
-                <tr className="border-t border-slate-100" key={region.region}>
-                  <td className="px-3 py-3">{region.region}</td>
-                  <td className="px-3 py-3 text-right">{region.정상}</td>
-                  <td className="px-3 py-3 text-right">{region.주의}</td>
-                  <td className="px-3 py-3 text-right">{region.위험}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <RiskList items={topFive} title="위험 지역 TOP 5" />
     </>
   )
 }
 
-function JeonnamOverview({ jeonnamDemo }) {
-  const totalGeneration = jeonnamDemo.reduce(
-    (sum, region) => sum + region.solar_generation,
+function JeonnamOverview({ jeonnamRows, selectedHour }) {
+  const totalGeneration = jeonnamRows.reduce(
+    (sum, row) => sum + (Number(row.solar_generation) || 0),
     0,
   )
-  const topThree = sortByRiskScore(jeonnamDemo).slice(0, 3)
-  const strongestCurtailment = topThree[0]?.curtailment_time ?? '없음'
+  const totalCumulativeGeneration = jeonnamRows.reduce(
+    (sum, row) => sum + (Number(row.cumulative_generation) || 0),
+    0,
+  )
+  const topRiskRows = sortByRiskScore(jeonnamRows).slice(0, 5)
+  const maxRiskPoint = topRiskRows[0]
 
   return (
     <>
       <div>
-        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">선택 지역</p>
+        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
+          선택 지역
+        </p>
         <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-[-0.04em] text-slate-950">
-          전라남도
+          전라남도 · {formatHour(selectedHour)}
         </h2>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <Metric label="전남 전체 예측 발전량" value={`${totalGeneration.toLocaleString()} MWh`} />
-        <Metric label="출력제어 예상 시간대" value={strongestCurtailment} />
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Metric label="표시 도시 수" value={`${jeonnamRows.length}개`} />
+        <Metric label="현재 발전량 합계" value={formatValue(totalGeneration, 'MW')} />
+        <Metric
+          label="예측 발전량 합계"
+          value={formatValue(totalCumulativeGeneration, 'MWh')}
+        />
+        <Metric
+          label="최고 위험 점수"
+          value={`${formatRiskScore(maxRiskPoint?.risk_score)}점`}
+        />
       </div>
 
-      <section className="mt-5">
-        <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
-          위험도가 높은 시군 TOP 3
-        </h3>
-        <div className="space-y-2">
-          {topThree.map((region) => (
-            <div
-              className="flex items-center justify-between rounded-[7px] border border-slate-100 bg-slate-50 px-3 py-2"
-              key={region.id}
-            >
-              <span className="text-[14px] font-semibold text-slate-900">{region.region}</span>
-              <div className="flex items-center gap-3">
-                <span className="text-[12px] font-medium text-slate-500">
-                  {formatRiskScore(region.risk_score)}점
-                </span>
-                <RiskBadge level={region.risk_level} />
-              </div>
-            </div>
-          ))}
+      <div className="panel-section mt-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
+            최고 위험 도시
+          </span>
+          <RiskBadge level={maxRiskPoint?.risk_level ?? '정상'} />
         </div>
-      </section>
+        <p className="text-[18px] font-semibold tracking-[-0.03em] text-slate-950">
+          {maxRiskPoint?.region ?? '데이터 없음'}
+        </p>
+        <p className="mt-2 text-[13px] font-medium leading-6 text-slate-600">
+          위험도 점수 {formatRiskScore(maxRiskPoint?.risk_score)}점
+        </p>
+      </div>
 
-      <section className="mt-5">
-        <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
-          지역별 데이터
-        </h3>
-        <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">
-          <table className="w-full border-collapse text-[12px]">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-3 py-3 text-left font-medium">지역</th>
-                <th className="px-3 py-3 text-right font-medium">예측량</th>
-                <th className="px-3 py-3 text-right font-medium">위험도</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jeonnamDemo.map((region) => (
-                <tr className="border-t border-slate-100" key={region.id}>
-                  <td className="px-3 py-3">{region.region}</td>
-                  <td className="px-3 py-3 text-right">{region.solar_generation} MWh</td>
-                  <td className="px-3 py-3 text-right">
-                    <RiskBadge level={region.risk_level} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <RiskList items={topRiskRows.slice(0, 5)} title="위험 도시 TOP 5" />
     </>
   )
 }
 
-function SinanOverview({ shinanPlants }) {
-  const totalAnnualGeneration = shinanPlants.reduce(
-    (sum, plant) => sum + (plant.annual_generation_kwh ?? plant.solar_generation ?? 0),
-    0,
-  )
+function SinanOverview({ selectedHour, shinanPlants, sinanRiskWindow, sinanSummary }) {
   const visiblePlants = shinanPlants.filter(hasValidPlantCoordinate)
   const failedPlants = shinanPlants.length - visiblePlants.length
 
   return (
     <>
       <div>
-        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">선택 지역</p>
+        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
+          선택 도시
+        </p>
         <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-[-0.04em] text-slate-950">
-          신안군
+          신안군 · {formatHour(selectedHour)}
         </h2>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <Metric label="전체 발전소 수" value={`${shinanPlants.length.toLocaleString()}개`} />
-        <Metric label="지도 표시 발전소 수" value={`${visiblePlants.length.toLocaleString()}개`} />
-        <Metric label="좌표 변환 실패 수" value={`${failedPlants.toLocaleString()}개`} />
+        <Metric label="지도 표시 발전소" value={`${visiblePlants.length.toLocaleString()}개`} />
         <Metric
-          label="예측 발전량 합계"
-          value={`${Math.round(totalAnnualGeneration).toLocaleString()} MWh`}
+          label="현재 발전량"
+          value={formatValue(sinanSummary?.solar_generation, 'MW')}
+        />
+        <Metric
+          label="누적 발전량"
+          value={formatValue(sinanSummary?.cumulative_generation, 'MWh')}
+        />
+        <Metric label="기온" value={formatValue(sinanSummary?.temperature, '°C')} />
+        <Metric
+          label="위험도 점수"
+          value={`${formatRiskScore(sinanSummary?.risk_score)}점`}
         />
       </div>
 
       <div className="panel-section mt-4">
-        <p className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
-          지도 표시 방식
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-semibold tracking-[-0.01em] text-slate-500">
+            신안군 위험도
+          </span>
+          <RiskBadge level={sinanSummary?.risk_level ?? '정상'} />
+        </div>
         <p className="text-[18px] font-semibold tracking-[-0.03em] text-slate-950">
-          전체 발전소 점 마커
+          출력제어 예상 {sinanRiskWindow}
         </p>
         <p className="mt-2 text-[13px] font-medium leading-6 text-slate-600">
-          점을 클릭하면 발전소 상세 정보가 표시됩니다.
+          좌표 변환 실패 발전소 {failedPlants.toLocaleString()}개는 지도에서 제외됩니다.
         </p>
       </div>
     </>
@@ -362,7 +340,7 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <Metric label="읍/면" value={plant.township || plant.matched_township || '-'} />
+          <Metric label="읍면" value={plant.township || plant.matched_township || '-'} />
           <Metric
             label="설비용량"
             value={formatValue(plant.permitted_capacity_kw ?? plant.solar_capacity, 'kW')}
@@ -373,7 +351,7 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
           />
           <Metric label="위험도 점수" value={`${formatRiskScore(plant.risk_score)}점`} />
           <Metric label="위험도 등급" value={<RiskBadge level={plant.risk_level} />} />
-          <Metric label="출력제어 예상 시간" value={plant.curtailment_time || '-'} />
+          <Metric label="출력제어 예상" value={plant.curtailment_time || '-'} />
         </div>
 
         <div className="panel-section mt-4">
@@ -381,7 +359,11 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
             주소
           </p>
           <p className="mt-3 text-[13px] leading-6 text-slate-700">
-            {plant.installation_address || plant.address || plant.matched_address || plant.original_address || '-'}
+            {plant.installation_address ||
+              plant.address ||
+              plant.matched_address ||
+              plant.original_address ||
+              '-'}
           </p>
         </div>
 
@@ -405,8 +387,8 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <Metric label="설비용량" value={`${plant.solar_capacity} MW`} />
-        <Metric label="예측 발전량" value={`${plant.solar_generation} MWh`} />
+        <Metric label="설비용량" value={formatValue(plant.solar_capacity, 'MW')} />
+        <Metric label="예측 발전량" value={formatValue(plant.solar_generation, 'MWh')} />
         <Metric label="Peak hour" value={formatHour(plant.peak_hour)} />
         <Metric label="출력제어 시간" value={plant.curtailment_time} />
       </div>
@@ -433,18 +415,31 @@ function PlantDetail({ onPlantDetailOpen, plant }) {
 function SidePanel({
   error,
   forecastRows,
+  jeonnamChartRows,
   jeonnamDemo,
+  jeonnamTimeData,
   loading,
   onPlantDetailOpen,
   plants,
-  regionRiskSummary,
   shinanPlants,
   selectedDate,
   selectedHour,
   selectedPlant,
   selectedRegion,
+  sinanChartRows,
   viewLevel,
 }) {
+  const sinanSummary = getSelectedCitySummary(jeonnamTimeData, '신안군', selectedHour)
+  const sinanRiskWindow = getJeonnamRiskWindow(getCityRows(jeonnamTimeData, '신안군'))
+  const customChartRows =
+    viewLevel === 'jeonnam'
+      ? jeonnamChartRows
+      : viewLevel === 'sinan' || selectedPlant
+        ? sinanChartRows
+        : undefined
+  const customChartUnit =
+    viewLevel === 'jeonnam' || viewLevel === 'sinan' || selectedPlant ? 'MW' : 'MWh'
+
   return (
     <div className="side-panel-shell">
       <PanelHeader selectedPlant={selectedPlant} viewLevel={viewLevel} />
@@ -467,15 +462,19 @@ function SidePanel({
           <NationalOverview
             forecastRows={forecastRows}
             plants={plants}
-            regionRiskSummary={regionRiskSummary}
             selectedDate={selectedDate}
             selectedHour={selectedHour}
             selectedRegion={selectedRegion}
           />
         ) : viewLevel === 'jeonnam' ? (
-          <JeonnamOverview jeonnamDemo={jeonnamDemo} />
+          <JeonnamOverview jeonnamRows={jeonnamDemo} selectedHour={selectedHour} />
         ) : (
-          <SinanOverview shinanPlants={shinanPlants} />
+          <SinanOverview
+            selectedHour={selectedHour}
+            shinanPlants={shinanPlants}
+            sinanRiskWindow={sinanRiskWindow}
+            sinanSummary={sinanSummary}
+          />
         )}
 
         <ForecastChart
@@ -483,6 +482,8 @@ function SidePanel({
           selectedDate={selectedDate}
           selectedPlant={selectedPlant}
           selectedRegion={selectedRegion}
+          timeSeriesRows={customChartRows}
+          unit={customChartUnit}
           viewLevel={viewLevel}
         />
       </div>
