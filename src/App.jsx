@@ -466,6 +466,7 @@ function DashboardApp({ onLogout }) {
         {currentPage === 'sector' && (
           <SectorCouplingPage
             onForecastOpen={openForecastMap}
+            sectorCouplingCases={sectorCouplingCases}
             selectedPlant={selectedPlant}
           />
         )}

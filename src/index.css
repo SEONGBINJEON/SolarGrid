@@ -1754,6 +1754,14 @@ input {
 
 /* ---- Sector Coupling Redesign ---- */
 
+@keyframes sector-flow-dash {
+  to { stroke-dashoffset: -16; }
+}
+
+.sector-flow-line {
+  animation: sector-flow-dash 1.4s linear infinite;
+}
+
 .sector-shell {
   height: 100vh;
   overflow-y: auto;
