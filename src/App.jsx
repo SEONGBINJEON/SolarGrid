@@ -116,7 +116,7 @@ function TimeControl({ dataHourRange, hourSequence, onHourChange, selectedHour }
         value={isPlaying ? playbackHour : selectedHour}
       />
       <div className="flex flex-col items-end gap-0.5">
-        <span className="text-[20px] font-semibold leading-none tracking-[-0.03em] text-slate-950">
+        <span className="text-[19px] font-semibold leading-none tracking-[-0.03em] text-slate-950">
           {String(selectedHour).padStart(2, '0')}:00
         </span>
         <span className="text-[10px] font-medium text-slate-400">
@@ -238,10 +238,10 @@ function DashboardApp({ onLogout }) {
 
             {/* Top-left title */}
             <div className="map-overlay-title">
-              <p className="text-[12px] font-medium text-slate-500">
+              <p className="text-[10px] font-medium text-white/45">
                 AI 발전량 예측 기반 출력제어 모니터링
               </p>
-              <h2 className="text-[20px] font-semibold leading-tight tracking-[-0.03em] text-slate-950">
+              <h2 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-white">
                 {stageLabels[viewLevel]} 현황
               </h2>
             </div>
@@ -265,32 +265,14 @@ function DashboardApp({ onLogout }) {
               />
             </div>
 
-            {/* Bottom floating control bar */}
+            {/* Bottom floating control bar — below right panel */}
             <footer className="map-overlay-controls">
-              <div className="date-control-group">
-                {availableDates.length > 0 &&
-                  availableDates.map((date) => (
-                    <button
-                      className={`control-button date-button ${effectiveDate === date ? 'is-active' : ''}`}
-                      key={date}
-                      onClick={() => setSelectedDate(date)}
-                      type="button"
-                    >
-                      {date}
-                    </button>
-                  ))}
-              </div>
-
-              <div className="w-px self-stretch bg-slate-200" />
-
               <TimeControl
                 dataHourRange={dataHourRange}
                 hourSequence={hourSequence}
                 onHourChange={setSelectedHour}
                 selectedHour={selectedHour}
               />
-
-              <div className="w-px self-stretch bg-slate-200" />
 
               <div className="stage-control-group">
                 <span className="stage-label">단계</span>
@@ -308,10 +290,8 @@ function DashboardApp({ onLogout }) {
                 ))}
               </div>
 
-              <div className="w-px self-stretch bg-slate-200" />
-
               <div className="legend-wrap">
-                <span className="text-[12px] font-medium text-slate-400">범례</span>
+                <span className="text-[11px] font-medium text-slate-400">범례</span>
                 <RiskBadge level="정상" />
                 <RiskBadge level="주의" />
                 <RiskBadge level="위험" />

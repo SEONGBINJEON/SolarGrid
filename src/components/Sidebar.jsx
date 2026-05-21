@@ -9,9 +9,9 @@ const NAV_ITEMS = [
 function ForecastIcon({ active }) {
   const c = active ? '#38bdf8' : '#64748b'
   return (
-    <svg fill="none" height="18" viewBox="0 0 18 18" width="18">
+    <svg fill="none" height="15" viewBox="0 0 18 18" width="15">
       <rect fill={c} height="11" opacity="0.12" rx="2" width="11" x="3.5" y="3.5" />
-      <path d="M3.5 9h11M9 3.5v11" opacity="0.5" stroke={c} strokeWidth="1.3" />
+      <path d="M3.5 9h11M9 3.5v11" opacity="0.5" stroke={c} strokeWidth="1.5" />
       <circle cx="9" cy="9" fill={c} r="2.2" />
     </svg>
   )
@@ -20,9 +20,9 @@ function ForecastIcon({ active }) {
 function PlantIcon({ active }) {
   const c = active ? '#38bdf8' : '#64748b'
   return (
-    <svg fill="none" height="18" viewBox="0 0 18 18" width="18">
-      <path d="M4.5 14V8.5M9 14V4M13.5 14v-5" stroke={c} strokeLinecap="round" strokeWidth="1.8" />
-      <rect height="3.5" rx="1" stroke={c} strokeWidth="1.3" width="3.5" x="7.25" y="1.5" />
+    <svg fill="none" height="15" viewBox="0 0 18 18" width="15">
+      <path d="M4.5 14V8.5M9 14V4M13.5 14v-5" stroke={c} strokeLinecap="round" strokeWidth="1.5" />
+      <rect height="3.5" rx="1" stroke={c} strokeWidth="1.5" width="3.5" x="7.25" y="1.5" />
     </svg>
   )
 }
@@ -30,14 +30,15 @@ function PlantIcon({ active }) {
 function CouplingIcon({ active }) {
   const c = active ? '#38bdf8' : '#64748b'
   return (
-    <svg fill="none" height="18" viewBox="0 0 18 18" width="18">
+    <svg fill="none" height="15" viewBox="0 0 18 18" width="15">
       <circle cx="4" cy="9" fill={c} opacity="0.85" r="2.5" />
       <circle cx="14" cy="4.5" fill={c} opacity="0.55" r="2" />
       <circle cx="14" cy="13.5" fill={c} opacity="0.55" r="2" />
-      <path d="M6.3 8.2L12 5.5M6.3 9.8L12 12.5" stroke={c} strokeLinecap="round" strokeWidth="1.4" />
+      <path d="M6.3 8.2L12 5.5M6.3 9.8L12 12.5" stroke={c} strokeLinecap="round" strokeWidth="1.5" />
     </svg>
   )
 }
+
 
 const ICONS = { forecast: ForecastIcon, plantDetail: PlantIcon, sector: CouplingIcon }
 
@@ -97,7 +98,7 @@ function Sidebar({ currentPage, onLogout, onPageChange }) {
       </div>
 
       <nav className="sidebar-nav">
-        <p className="sidebar-nav-section">메뉴</p>
+        <p className="sidebar-nav-section">MENU</p>
         {NAV_ITEMS.map((item) => {
           const Icon = ICONS[item.id]
           const active = currentPage === item.id

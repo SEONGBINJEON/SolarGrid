@@ -96,7 +96,7 @@ function NationalOverview({
         </h2>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <Metric label="표시 지역 수" value={`${currentRows.length}개`} />
         <Metric label="전체 발전소 수" value={`${plants.length}개`} />
         <Metric label="전체 설비용량" value={`${totalCapacity.toLocaleString()} MW`} />
@@ -153,7 +153,7 @@ function NationalOverview({
         <div className="space-y-2">
           {topFive.map((region) => (
             <div
-              className="flex items-center justify-between rounded-[16px] border border-slate-100 bg-slate-50 px-4 py-3 shadow-sm"
+              className="flex items-center justify-between rounded-[7px] border border-slate-100 bg-slate-50 px-3 py-2"
               key={region.region}
             >
               <span className="text-[14px] font-semibold text-slate-900">{region.region}</span>
@@ -170,7 +170,7 @@ function NationalOverview({
         <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
           지역별 위험 요약
         </h3>
-        <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">
           <table className="w-full border-collapse text-[12px]">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
@@ -226,7 +226,7 @@ function JeonnamOverview({ jeonnamDemo }) {
         <div className="space-y-2">
           {topThree.map((region) => (
             <div
-              className="flex items-center justify-between rounded-[16px] border border-slate-100 bg-slate-50 px-4 py-3 shadow-sm"
+              className="flex items-center justify-between rounded-[7px] border border-slate-100 bg-slate-50 px-3 py-2"
               key={region.id}
             >
               <span className="text-[14px] font-semibold text-slate-900">{region.region}</span>
@@ -245,7 +245,7 @@ function JeonnamOverview({ jeonnamDemo }) {
         <h3 className="mb-3 text-[15px] font-semibold tracking-[-0.02em] text-slate-950">
           지역별 데이터
         </h3>
-        <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">
           <table className="w-full border-collapse text-[12px]">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
