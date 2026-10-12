@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { id: 'forecast', label: 'Forecast Map' },
   { id: 'plantDetail', label: 'Plant Detail' },
   { id: 'sector', label: 'Sector Coupling' },
+  { id: 'analytics', label: 'Process Analytics' },
 ]
 
 function ForecastIcon({ active }) {
@@ -44,7 +45,18 @@ function CouplingIcon({ active }) {
   )
 }
 
-const ICONS = { forecast: ForecastIcon, plantDetail: PlantIcon, sector: CouplingIcon }
+function AnalyticsIcon({ active }) {
+  const c = active ? '#38bdf8' : '#64748b'
+  return (
+    <svg fill="none" height="15" viewBox="0 0 18 18" width="15">
+      <path d="M2.5 15.5h13" opacity="0.5" stroke={c} strokeLinecap="round" strokeWidth="1.5" />
+      <path d="M3.5 12.5l3.5-4 3 2.5 4.5-6" stroke={c} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path d="M2.5 5.5h13" opacity="0.35" stroke={c} strokeDasharray="2 2" strokeWidth="1.2" />
+    </svg>
+  )
+}
+
+const ICONS = { forecast: ForecastIcon, plantDetail: PlantIcon, sector: CouplingIcon, analytics: AnalyticsIcon }
 
 function SunLogo() {
   return (

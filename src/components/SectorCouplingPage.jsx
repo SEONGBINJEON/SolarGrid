@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Papa from 'papaparse'
 import {
   Bar,
@@ -9,6 +9,14 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import {
+  ESS_MODES,
+  peakHours,
+  resourcesFromRows,
+  simulateAllocation,
+  surplusFromRows,
+} from '../utils/allocationSimulator'
+import WhatIfSimulator from './WhatIfSimulator'
 
 // ---- Case definitions ----
 const CASE_DEFS = {
@@ -302,7 +310,7 @@ function HourlyChart({ chartData }) {
         시간대별 잉여전력 분배 현황
       </p>
       <div style={{ height: 170 }}>
-        <ResponsiveContainer height="100%" width="100%">
+        <ResponsiveContainer height="100%" initialDimension={{ width: 600, height: 200 }} width="100%">
           <BarChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: -22 }}>
             <CartesianGrid stroke="rgba(148,163,184,0.1)" vertical={false} />
             <XAxis
@@ -361,7 +369,7 @@ function HourlyChart({ chartData }) {
 }
 
 // ---- Compare Table ----
-function CompareTable({ compareData, activeCase }) {
+function CompareTable({ compareData, activeCase, socUtilByMethod }) {
   if (!compareData.length) return null
 
   const maxTotal = Math.max(...compareData.map((r) => r.totalMwh))
@@ -392,12 +400,15 @@ function CompareTable({ compareData, activeCase }) {
         >
           케이스 비교
         </p>
+        <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>
+          SOC 반영 활용률: 배터리 충전 상태를 반영해 실제로 가능한 값 (잉여 시간 사이 방전 없음 가정)
+        </p>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'rgba(248,250,252,0.9)' }}>
-              {['구분', 'ESS 분배량', 'EV 분배량', 'P2H 분배량', '총 분배량', '잔여 제한량', '활용률', 'ESS 사용 횟수'].map(
+              {['구분', 'ESS 분배량', 'EV 분배량', 'P2H 분배량', '총 분배량', '잔여 제한량', '활용률', 'SOC 반영 활용률', 'ESS 사용 횟수'].map(
                 (h) => (
                   <th
                     key={h}
@@ -509,6 +520,24 @@ function CompareTable({ compareData, activeCase }) {
                       {fmt(row.utilizationPct, 2)}%
                     </span>
                   </td>
+                  <td style={{ padding: '11px 14px', textAlign: 'right' }}>
+                    {socUtilByMethod?.[row.구분] == null ? (
+                      <span style={{ color: '#cbd5e1' }}>-</span>
+                    ) : (
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            Math.abs(socUtilByMethod[row.구분] - row.utilizationPct) > 0.005
+                              ? '#b45309'
+                              : '#0f172a',
+                        }}
+                        title="충전 상태(SOC)를 반영한 실현 가능 활용률"
+                      >
+                        {fmt(socUtilByMethod[row.구분], 2)}%
+                      </span>
+                    )}
+                  </td>
                   <td
                     style={{
                       padding: '11px 14px',
@@ -602,6 +631,23 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
       })
       .catch(() => {})
   }, [])
+
+  // 충전 상태(SOC)를 반영한 케이스별 실현 가능 활용률
+  const socUtilByMethod = useMemo(() => {
+    const rows = sectorCouplingCases?.case1 ?? []
+    const surplus = surplusFromRows(rows)
+    if (surplus.length === 0) {
+      return {}
+    }
+    const resources = resourcesFromRows(rows)
+    return Object.fromEntries(
+      ESS_MODES.map((mode) => [
+        mode.label,
+        simulateAllocation(surplus, resources, { essHours: peakHours(surplus, mode.peaks), soc: true })
+          .utilizationPct,
+      ]),
+    )
+  }, [sectorCouplingCases])
 
   if (!selectedPlant) {
     return <EmptySectorState onForecastOpen={onForecastOpen} />
@@ -889,7 +935,10 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
       </div>
 
       {/* Compare table */}
-      <CompareTable activeCase={activeCase} compareData={compareData} />
+      <CompareTable activeCase={activeCase} compareData={compareData} socUtilByMethod={socUtilByMethod} />
+
+      {/* What-if: 설계 변수 변경 → 활용률·필요 설비 즉시 계산 */}
+      <WhatIfSimulator caseRows={sectorCouplingCases?.case1 ?? []} />
     </div>
   )
 }

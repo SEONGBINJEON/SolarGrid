@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import ProcessAnalyticsPage from './components/analytics/ProcessAnalyticsPage'
 import DashboardMap from './components/DashboardMap'
 import PlantDetailPage from './components/PlantDetailPage'
 import RiskBadge from './components/RiskBadge'
@@ -148,7 +149,6 @@ function DashboardApp({ onLogout }) {
     jeonnamDemo,
     jeonnamTimeData,
     loading,
-    regionRiskSummary,
     sectorCouplingCases,
     shinanPlants,
   } = useSolarData()
@@ -374,7 +374,6 @@ function DashboardApp({ onLogout }) {
                 jeonnamTimeData={jeonnamTimeData}
                 loading={loading}
                 onPlantDetailOpen={openPlantDetail}
-                regionRiskSummary={regionRiskSummary}
                 selectedDate={effectiveDate}
                 selectedHour={effectiveSelectedHour}
                 selectedPlant={selectedPlant}
@@ -468,6 +467,9 @@ function DashboardApp({ onLogout }) {
             selectedPlant={selectedPlant}
           />
         )}
+
+        {/* ---- Process Analytics page (Python 분석 파이프라인 결과) ---- */}
+        {currentPage === 'analytics' && <ProcessAnalyticsPage />}
       </div>
     </div>
   )
