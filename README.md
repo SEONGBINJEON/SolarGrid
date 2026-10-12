@@ -1,7 +1,11 @@
 # SolarGrid · 태양광 출력제한 예측과 잉여전력 분배 시뮬레이션
 
+[![CI](https://github.com/SEONGBINJEON/SolarGrid/actions/workflows/ci.yml/badge.svg)](https://github.com/SEONGBINJEON/SolarGrid/actions/workflows/ci.yml)
+
 > 2026 영남대학교 SW·HUSS·COSS 융합 AI해커톤 · 팀 시너지온(8조)
 > 해커톤 이후 **데이터 품질 관리와 공정 분석** 관점으로 고도화한 버전입니다.
+
+![Forecast Map 전국 화면](docs/images/forecast-map.jpg)
 
 계통이 받아주지 못해 버려지는 태양광 전력(출력제한)을 제조 현장의 **생산 손실**로 보고,
 정의 → 측정 → 분석 → 개선 → 관리(DMAIC) 흐름으로 데이터 파이프라인과 대시보드를 설계했습니다.
@@ -15,7 +19,8 @@
 | 데이터 품질 게이트 | 없음 | 13개 검사 · 통과 11 · 주의 2 · 실패 0 |
 | 분배 결과 검증 | 없음 | 팀 결과 재현 오차 0.0000%p, 충전 상태(SOC) 실현성 검증 |
 | 잉여전력 활용률 기준값 | 52.75% (Case 1, SOC 미반영) | **50.88% (Case 2, SOC 반영 실현값)** |
-| 자동 테스트 | 없음 | Python 32개 · JavaScript 5개 |
+| 화면 집계 정확도 | 좌표 없는 40기를 '지도 표시'로 집계 | 분석 결과와 일치 (표시 2,042 · 실패 40) |
+| 자동 테스트 | 없음 | Python 34개 · JavaScript 7개, push마다 GitHub Actions 실행 |
 
 ## 화면 구성
 
@@ -26,7 +31,19 @@
 | Sector Coupling | ESS·EV·P2H 분배 Case 1~3 비교, **SOC 반영 활용률 열**, **What-if 시뮬레이터** |
 | **Process Analytics (신규)** | 데이터 품질 · 설비 구조 · 위험 패턴 · 관리도 4개 탭 |
 
-What-if 시뮬레이터에서는 P2H 전환비율, ESS 용량, EV 수용량, ESS 운전 전략, SOC 반영 여부를 바꾸면
+| 공정 분석 · 데이터 품질 | 공정 분석 · 관리도 |
+|---|---|
+| ![데이터 품질 탭](docs/images/analytics-quality.png) | ![관리도 탭](docs/images/analytics-control-chart.png) |
+| **공정 분석 · 위험 패턴** | **공정 분석 · 설비 구조** |
+| ![위험 패턴 탭](docs/images/analytics-risk.png) | ![설비 구조 탭](docs/images/analytics-capacity.png) |
+| **Sector Coupling** | **신안군 발전소 2,042기** |
+| ![Sector Coupling 화면](docs/images/sector-coupling.jpg) | ![신안군 발전소 지도](docs/images/forecast-sinan.jpg) |
+
+### What-if 시뮬레이터
+
+![What-if 시뮬레이터](docs/images/what-if-simulator.png)
+
+P2H 전환비율, ESS 용량, EV 수용량, ESS 운전 전략, SOC 반영 여부를 바꾸면
 활용률과 잔여 출력제한이 즉시 다시 계산되고, 목표 활용률(60·70·80%)에 필요한 ESS 용량과 P2H 비율을 역산합니다.
 
 ## 아키텍처
@@ -52,10 +69,10 @@ flowchart LR
 | 단계 | 구현 내용 | 제조 현장의 대응 개념 |
 |---|---|---|
 | Define | 출력제한을 생산 후 폐기 전력으로 정의, 핵심 지표(CTQ) 설정 | 손실 정의 · CTQ |
-| Measure | 주소 정규화·좌표화 수율 관리, 13개 품질 게이트, 실패 원인 분류 | 공정 수율 · 검사 공정 · 근본원인 분석(RCA) |
+| Measure | 주소 정규화·좌표화 수율 관리, 13개 품질 게이트, 실패 원인 분류, 화면 집계 오류 수정 | 공정 수율 · 검사 공정 · 근본원인 분석(RCA) · 계측 오류 |
 | Analyze | 설비용량 파레토·ABC 분류, 지역×시간 위험 히트맵, 기상 인자 순위상관 | 파레토 · ABC 분석 · 요인 분석 |
 | Improve | 등급별 대응 규칙(OCAP), SOC 실현성 검증, 민감도 분석, 필요 설비 역산 | OCAP · 설비 수명 관리 · CAPA 산정 |
-| Control | 관리도(경고 한계 0.05 · 조치 한계 0.4 · 3시간 연속 지속 경보), 경보 이벤트 기록 | SPC 관리도 · 연속 규칙(Run rule) |
+| Control | 관리도(경고 한계 0.05 · 조치 한계 0.4 · 3시간 연속 지속 경보), 경보 이벤트 기록, CI 재현성 검사 | SPC 관리도 · 연속 규칙(Run rule) · 표준 작업 |
 
 ## 개선 사례 1: 검사 규칙이 불량을 만들고 있었다
 
@@ -105,25 +122,51 @@ flowchart LR
 - 설계 변수를 ±10% 바꾸면 P2H 전환비율은 활용률을 ±5.00%p, ESS 용량은 ±0.06%p 움직입니다.
 - 목표 활용률 60·70·80%에는 ESS만 늘릴 경우 15.5·31.5·47.5 MWh, P2H 비율만 올릴 경우 59.1·69.1·79.1%가 필요합니다.
 
+## 개선 사례 3: 계측기가 빈 값을 0으로 읽고 있었다
+
+신안군 화면은 '지도 표시 발전소 2,082기, 좌표 변환 실패 0기'라고 표시했습니다.
+분석 파이프라인의 좌표화 결과(성공 2,042기, 실패 40기)와 맞지 않았습니다.
+
+- **원인**: 좌표화에 실패한 발전소는 CSV의 위경도가 빈 칸인데, JavaScript에서 `Number('')`는 `0`이 됩니다.
+  좌표가 없는 40기가 (0, 0) 좌표를 가진 정상 데이터로 판정되어, 지도에는 보이지 않으면서 집계에만 들어갔습니다.
+  검색창에서 이 발전소를 고르면 지도가 적도 부근 바다로 이동하는 증상도 같은 원인이었습니다.
+- **조치**: 네 곳에 복사되어 있던 좌표 판정 함수를 `src/utils/coordinateUtils.js` 하나로 모으고, 빈 값은 '좌표 없음'으로 읽게 했습니다.
+  같은 결함이 다시 생기지 않도록 테스트(`tests/coordinateUtils.test.js`)로 고정했습니다.
+- **결과**: 화면 집계(표시 2,042기 · 실패 40기)가 분석 결과와 일치합니다.
+
+## 품질 보증 (GitHub Actions)
+
+push와 Pull Request마다 [CI 워크플로](.github/workflows/ci.yml)가 실행됩니다.
+
+| 작업 | 검사 내용 |
+|---|---|
+| 대시보드 | ESLint, JavaScript 테스트 7개, 프로덕션 빌드 |
+| 분석 파이프라인 | pytest 34개, `run_analysis.py --check` |
+
+`--check`는 원천 데이터로 분석을 다시 돌려, 저장소에 커밋된 `analytics.json`과 숫자가 같은지 비교합니다(실행 시각 제외).
+원천 데이터나 분석 코드를 바꾸고 결과 파일을 갱신하지 않으면 CI가 실패하므로, 화면의 숫자와 코드가 어긋날 수 없습니다.
+
 ## 폴더 구조
 
 ```text
 solar-dashboard/
+├─ .github/workflows/        CI (린트 · 테스트 · 빌드 · 분석 재현성)
 ├─ analysis/                 Python 분석 파이프라인
 │  ├─ solargrid/             address · allocation · patterns · quality · io 모듈
-│  ├─ tests/                 pytest 테스트 32개
+│  ├─ tests/                 pytest 테스트 34개
 │  ├─ baseline/              해커톤 당시 좌표화 결과 (전후 비교 기준선)
 │  ├─ reports/               자동 생성 분석 보고서
-│  ├─ run_analysis.py        파이프라인 실행 진입점
-│  └─ requirements.txt
+│  ├─ run_analysis.py        파이프라인 실행 진입점 (--check: 재현성 검사)
+│  └─ requirements.txt       검증한 버전으로 고정
 ├─ scripts/
 │  └─ geocode_shinan_plants.py   주소 정규화 · Kakao 좌표화 · 교차검증
 ├─ public/data/              원천·가공 CSV, analytics.json
+├─ docs/images/              README 화면 캡처
 ├─ src/
 │  ├─ components/analytics/  공정 분석 화면 (데이터 품질 · 설비 구조 · 위험 패턴 · 관리도)
 │  ├─ components/            지도 · 발전소 상세 · 섹터커플링 · What-if 시뮬레이터
 │  ├─ hooks/                 CSV · 분석 결과 로딩
-│  └─ utils/                 분배 시뮬레이터 · 위험 등급 · 시간대 계산
+│  └─ utils/                 분배 시뮬레이터 · 좌표 판정 · 위험 등급 · 시간대 계산
 └─ tests/                    JavaScript 테스트 (Node 내장 테스트 러너)
 ```
 
@@ -136,18 +179,21 @@ npm install
 npm run dev
 ```
 
-데모 로그인 계정은 `src/pages/LoginPage.jsx`에 있습니다.
+로그인 화면에서 「데모 계정으로 둘러보기」를 누릅니다. 주소 끝에 `#/analytics`, `#/sector`처럼 붙이면 해당 화면이 바로 열립니다.
+GitHub Pages용 빌드는 `npm run build:pages`입니다 (`/SolarGrid/` 경로 기준).
 
 ### 분석 파이프라인 (Python 3.12)
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate            # macOS·Linux: source .venv/bin/activate
 pip install -r analysis/requirements.txt
 python analysis/run_analysis.py
+python analysis/run_analysis.py --check
 ```
 
-`public/data/analytics.json`과 `analysis/reports/analysis_report.md`가 새로 만들어집니다.
+첫 명령은 `public/data/analytics.json`과 `analysis/reports/analysis_report.md`를 새로 만들고,
+`--check`는 파일을 쓰지 않고 커밋된 결과와 같은지만 확인합니다 (CI와 같은 검사).
 
 ### 좌표화 다시 실행 (Kakao REST API 키 필요)
 
