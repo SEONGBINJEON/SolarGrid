@@ -10118,5 +10118,389 @@
     "matched_address": "전남 신안군 안좌면 산두리 55",
     "matched_township": "안좌면",
     "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1225-35": {
+    "status": "ok",
+    "lat": "34.8874293080018",
+    "lng": "126.321952395526",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1225-35",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 학교리 253-1": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 학교리 224-4": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 학교리 223-1": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 학교리 255-1": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 학교리 252-2": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 학교리 산 55-55": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 안좌면 읍동리 889-2": {
+    "status": "ok",
+    "lat": "34.753509957008",
+    "lng": "126.125487746089",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 읍동리 889-2",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-4": {
+    "status": "ok",
+    "lat": "34.9064323434105",
+    "lng": "126.345988362697",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-4",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-10": {
+    "status": "ok",
+    "lat": "34.9060029679524",
+    "lng": "126.345025079102",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-10",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-6": {
+    "status": "ok",
+    "lat": "34.9061409332532",
+    "lng": "126.345905547753",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-6",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-7": {
+    "status": "ok",
+    "lat": "34.9059445346821",
+    "lng": "126.345840689908",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-7",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-8": {
+    "status": "ok",
+    "lat": "34.905683129663",
+    "lng": "126.345605222393",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-8",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 복룡리 1786-9": {
+    "status": "ok",
+    "lat": "34.9057224069595",
+    "lng": "126.345098974051",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1786-9",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 비금면 덕산리 145-48": {
+    "status": "ok",
+    "lat": "34.7512810269972",
+    "lng": "125.929920650055",
+    "matched_address": "전남광주통합특별시 신안군 비금면 덕산리 145-48",
+    "matched_township": "비금면",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 가룡리 448-29": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 감정리 2002": {
+    "status": "ok",
+    "lat": "35.0703414547713",
+    "lng": "126.165061576694",
+    "matched_address": "전남광주통합특별시 신안군 지도읍 감정리 2002",
+    "matched_township": "지도읍",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 대척리 산 17-1": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 안좌면 대척리 16-6": {
+    "status": "ok",
+    "lat": "34.7463627605149",
+    "lng": "126.145006006789",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 대척리 16-6",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 복호리 22": {
+    "status": "ok",
+    "lat": "34.7013514121182",
+    "lng": "126.172895336373",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 복호리 22",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 압해읍 대천리 642-17": {
+    "status": "ok",
+    "lat": "34.8634405802703",
+    "lng": "126.268778349035",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 대천리 642-17",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 지도읍 태천리 산 347-1": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 태천리 산 346": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 태천리 산 345": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 태천리 347-4": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 태천리 347-5": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 안좌면 탄동리 17-3": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 안좌면 탄동리 14-5": {
+    "status": "ok",
+    "lat": "34.7445296051776",
+    "lng": "126.16640628481",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 탄동리 14-5",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 탄동리 14-7": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 지도읍 태천리 산 396-57": {
+    "status": "no_result",
+    "lat": "",
+    "lng": "",
+    "matched_address": "",
+    "matched_township": "",
+    "message": "검색 결과 없음"
+  },
+  "전라남도 신안군 압해읍 복룡리 1111-25": {
+    "status": "ok",
+    "lat": "34.8926831927616",
+    "lng": "126.317350729119",
+    "matched_address": "전남광주통합특별시 신안군 압해읍 복룡리 1111-25",
+    "matched_township": "압해읍",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 222-3": {
+    "status": "ok",
+    "lat": "34.7382121948677",
+    "lng": "126.078147456698",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 222-3",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 복호리 8": {
+    "status": "ok",
+    "lat": "34.7021570392802",
+    "lng": "126.171947251704",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 복호리 8",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 암태면 수곡리 1590": {
+    "status": "ok",
+    "lat": "34.8098102526783",
+    "lng": "126.065088485535",
+    "matched_address": "전남광주통합특별시 신안군 암태면 수곡리 1590",
+    "matched_township": "암태면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 57": {
+    "status": "ok",
+    "lat": "34.7432566158668",
+    "lng": "126.080726374295",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 57",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 260-3": {
+    "status": "ok",
+    "lat": "34.7408682483262",
+    "lng": "126.076654084538",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 260-3",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 500": {
+    "status": "ok",
+    "lat": "34.7381845208969",
+    "lng": "126.077432996217",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 500",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 260": {
+    "status": "ok",
+    "lat": "34.7422195472225",
+    "lng": "126.076017500788",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 260",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 59": {
+    "status": "ok",
+    "lat": "34.7427275675748",
+    "lng": "126.08084208782",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 59",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 5": {
+    "status": "ok",
+    "lat": "34.74729855612",
+    "lng": "126.078635227174",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 5",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 10": {
+    "status": "ok",
+    "lat": "34.74631376144",
+    "lng": "126.078642231772",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 10",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 18": {
+    "status": "ok",
+    "lat": "34.744931805819",
+    "lng": "126.079899404616",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 18",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 30-2": {
+    "status": "ok",
+    "lat": "34.742989274293",
+    "lng": "126.079891897246",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 30-2",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 30": {
+    "status": "ok",
+    "lat": "34.7436547346585",
+    "lng": "126.079112919991",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 30",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 131": {
+    "status": "ok",
+    "lat": "34.7425718011937",
+    "lng": "126.078598497437",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 131",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 299": {
+    "status": "ok",
+    "lat": "34.7464286184028",
+    "lng": "126.075457597498",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 299",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 294": {
+    "status": "ok",
+    "lat": "34.7458606266806",
+    "lng": "126.075453333951",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 294",
+    "matched_township": "안좌면",
+    "message": ""
+  },
+  "전라남도 신안군 안좌면 내호리 292": {
+    "status": "ok",
+    "lat": "34.7455808676122",
+    "lng": "126.075718425033",
+    "matched_address": "전남광주통합특별시 신안군 안좌면 내호리 292",
+    "matched_township": "안좌면",
+    "message": ""
   }
 }
