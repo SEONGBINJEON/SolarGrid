@@ -1,7 +1,8 @@
 """분석 파이프라인: 원천 CSV → 품질 검사·패턴 분석·분배 시뮬레이션 → 대시보드용 JSON + 보고서.
 
 실행 (solar-dashboard 폴더에서)
-    .venv\\Scripts\\python analysis\\run_analysis.py
+    python analysis/run_analysis.py           결과 파일을 다시 만든다
+    python analysis/run_analysis.py --check   파일은 그대로 두고, 다시 계산한 값이 커밋된 결과와 같은지 확인한다
 
 출력
     public/data/analytics.json          대시보드 '공정 분석' 화면이 읽는 결과
@@ -9,6 +10,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from collections import Counter
@@ -166,7 +168,7 @@ def write_report(a: dict):
         "# SolarGrid 분석 보고서",
         "",
         f"자동 생성: {a['meta']['generated_at']} · 예측일 {a['meta']['forecast_date']} · "
-        "생성 명령 `.venv\\Scripts\\python analysis\\run_analysis.py`",
+        "생성 명령 `python analysis/run_analysis.py`",
         "",
         "## 1. 데이터 품질 게이트",
         "",
@@ -221,8 +223,39 @@ def write_report(a: dict):
     OUT_REPORT.write_text("\n".join(md), encoding="utf-8")
 
 
-def main():
+def comparable(a: dict) -> dict:
+    """실행 시각처럼 실행할 때마다 달라지는 값을 뺀 사본. JSON 왕복으로 자료형도 맞춘다."""
+    out = json.loads(json.dumps(a, ensure_ascii=False))
+    out["meta"].pop("generated_at", None)
+    return out
+
+
+def check(analytics: dict) -> int:
+    """다시 계산한 결과가 커밋된 analytics.json과 같은지 확인한다 (CI 재현성 검사)."""
+    if not OUT_JSON.exists():
+        print(f"비교할 결과 파일이 없습니다: {OUT_JSON.relative_to(ROOT_DIR)}")
+        return 1
+    expected = comparable(json.loads(OUT_JSON.read_text(encoding="utf-8")))
+    actual = comparable(analytics)
+    if expected == actual:
+        print("재현성 확인: 다시 계산한 결과가 커밋된 analytics.json과 같습니다.")
+        return 0
+    changed = [key for key in sorted(set(expected) | set(actual)) if expected.get(key) != actual.get(key)]
+    print("재현성 불일치: " + ", ".join(changed) + " 섹션이 다릅니다. "
+          "원천 데이터나 분석 코드를 바꿨다면 run_analysis.py를 다시 실행해 결과를 함께 커밋하세요.")
+    return 1
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="SolarGrid 분석 파이프라인")
+    parser.add_argument("--check", action="store_true",
+                        help="파일을 쓰지 않고, 다시 계산한 결과가 커밋된 analytics.json과 같은지만 확인")
+    args = parser.parse_args(argv)
+
     analytics = build()
+    if args.check:
+        sys.exit(check(analytics))
+
     OUT_JSON.write_text(json.dumps(analytics, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     write_report(analytics)
     s = analytics["quality"]["summary"]

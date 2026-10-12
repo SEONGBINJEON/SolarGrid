@@ -1,4 +1,6 @@
-pandas>=2.2
-requests>=2.32
-python-dotenv>=1.0
-pytest>=8.0
+# 분석 결과 재현성을 위해 검증한 버전으로 고정합니다 (GitHub Actions도 같은 버전을 설치).
+pandas==3.0.3
+numpy==2.4.5
+requests==2.34.2
+python-dotenv==1.2.2
+pytest==9.1.1

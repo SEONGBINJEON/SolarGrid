@@ -1,6 +1,6 @@
 # SolarGrid 분석 보고서
 
-자동 생성: 2026-10-12T14:58:31 · 예측일 2026-05-22 · 생성 명령 `.venv\Scripts\python analysis\run_analysis.py`
+자동 생성: 2026-10-12T23:53:00 · 예측일 2026-05-22 · 생성 명령 `python analysis/run_analysis.py`
 
 ## 1. 데이터 품질 게이트
 
