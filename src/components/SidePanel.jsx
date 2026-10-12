@@ -1,3 +1,4 @@
+import { hasValidPlantCoordinate } from '../utils/coordinateUtils'
 import {
   formatRiskScore,
   getRiskMessage,
@@ -62,10 +63,6 @@ function formatNumber(value, fractionDigits = 1) {
 function formatValue(value, unit = '', fractionDigits = 1) {
   const formatted = formatNumber(value, fractionDigits)
   return formatted === '-' || unit === '' ? formatted : `${formatted} ${unit}`
-}
-
-function hasValidPlantCoordinate(plant) {
-  return Number.isFinite(Number(plant.lat)) && Number.isFinite(Number(plant.lng))
 }
 
 function getPanelTitle({ selectedPlant, viewLevel }) {

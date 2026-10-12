@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { divIcon } from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { hasValidPlantCoordinate, toCoordinate } from '../utils/coordinateUtils'
 import PlantPointMarker from './PlantPointMarker'
 import RegionMarker from './RegionMarker'
 
@@ -17,10 +18,6 @@ const mapViews = {
     center: [34.82, 126.08],
     zoom: 9,
   },
-}
-
-function hasValidPlantCoordinate(plant) {
-  return Number.isFinite(Number(plant.lat)) && Number.isFinite(Number(plant.lng))
 }
 
 const neighboringCityLabels = [
@@ -68,10 +65,10 @@ function SelectedPlantFocus({ selectedPlant, viewLevel }) {
       return
     }
 
-    const lat = Number(selectedPlant.lat)
-    const lng = Number(selectedPlant.lng)
+    const lat = toCoordinate(selectedPlant.lat)
+    const lng = toCoordinate(selectedPlant.lng)
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    if (lat === null || lng === null) {
       return
     }
 
@@ -120,10 +117,8 @@ function DashboardMap({
         maxZoom={18}
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       />
-      <TileLayer
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-      />
+      {/* 지명은 아래 마커(NeighboringCityLabels·지역·발전소)가 한글로 직접 그린다.
+          예전에 쓰던 CARTO 라벨 타일은 API 키 없이 요청하면 워터마크만 내려줘서 제거했다. */}
       <ViewController viewLevel={viewLevel} />
       <SelectedPlantFocus selectedPlant={selectedPlant} viewLevel={viewLevel} />
       {viewLevel === 'national' ? <NeighboringCityLabels /> : null}

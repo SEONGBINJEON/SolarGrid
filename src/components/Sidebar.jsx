@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { hasValidPlantCoordinate } from '../utils/coordinateUtils'
 import {
   DEMO_PLANT_NAME,
   matchesDemoPlantSearch,
@@ -103,10 +104,6 @@ function getPlantLocation(plant) {
   )
 }
 
-function hasValidCoordinate(plant) {
-  return Number.isFinite(Number(plant.lat)) && Number.isFinite(Number(plant.lng))
-}
-
 function Sidebar({
   currentPage,
   onLogout,
@@ -127,7 +124,7 @@ function Sidebar({
     return searchPlants
       .filter(
         (plant) =>
-          hasValidCoordinate(plant) &&
+          hasValidPlantCoordinate(plant) &&
           normalizeSearchText(plant.plant_name).includes(normalizedSearch),
       )
       .sort((a, b) => {
