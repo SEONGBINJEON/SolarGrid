@@ -203,36 +203,6 @@ function classifyRiskLevel(level) {
   return '정상'
 }
 
-export function summarizeForecastRows(rows) {
-  const grouped = new Map()
-
-  rows.forEach((row) => {
-    const current = grouped.get(row.region) ?? {
-      region: row.region,
-      정상: 0,
-      주의: 0,
-      위험: 0,
-      전체: 0,
-    }
-    const summaryLevel = classifyRiskLevel(row.risk_level)
-
-    current[summaryLevel] += 1
-    current.전체 += 1
-    grouped.set(row.region, current)
-  })
-
-  return [...grouped.values()].map((row) => {
-    const cautionDangerTotal = row.주의 + row.위험
-
-    return {
-      ...row,
-      주의_위험_합계: cautionDangerTotal,
-      '주의_위험_비율(%)': row.전체 === 0 ? 0 : (cautionDangerTotal / row.전체) * 100,
-      '위험_비율(%)': row.전체 === 0 ? 0 : (row.위험 / row.전체) * 100,
-    }
-  })
-}
-
 function buildFallbackForecastRows() {
   const fallbackRegions = [
     {
@@ -338,9 +308,6 @@ function useSolarData() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [forecastRows, setForecastRows] = useState(fallbackData.forecastRows)
-  const [regionRiskSummary, setRegionRiskSummary] = useState(
-    summarizeForecastRows(fallbackData.forecastRows),
-  )
   const [jeonnamDemo, setJeonnamDemo] = useState(fallbackData.jeonnamDemo)
   const [plants, setPlants] = useState(fallbackData.plants)
   const [shinanPlants, setShinanPlants] = useState([])
@@ -357,7 +324,6 @@ function useSolarData() {
     async function loadSolarData() {
       const [
         forecastResult,
-        summaryResult,
         jeonnamResult,
         plantsResult,
         shinanPlantsResult,
@@ -379,16 +345,6 @@ function useSolarData() {
           'cloud_total',
           'risk_score',
           'risk_level',
-        ]),
-        parseCsv('/data/region_risk_summary.csv', [
-          'region',
-          '정상',
-          '주의',
-          '위험',
-          '전체',
-          '주의_위험_합계',
-          '주의_위험_비율(%)',
-          '위험_비율(%)',
         ]),
         parseCsv('/data/jeonnam_demo.csv', [
           'id',
@@ -478,10 +434,6 @@ function useSolarData() {
         shinanPlantsResult.status === 'fulfilled'
           ? normalizeShinanPlants(shinanPlantsResult.value)
           : normalizeShinanPlants(nextPlants)
-      const nextRegionRiskSummary =
-        summaryResult.status === 'fulfilled'
-          ? summaryResult.value
-          : summarizeForecastRows(nextForecastRows)
       const nextJeonnamTimeData =
         jeonnamTimeResult.status === 'fulfilled'
           ? normalizeJeonnamTimeData(jeonnamTimeResult.value)
@@ -492,7 +444,6 @@ function useSolarData() {
           : { case1: [], case2: [], case3: [] }
 
       setForecastRows(nextForecastRows)
-      setRegionRiskSummary(nextRegionRiskSummary)
       setJeonnamDemo(nextJeonnamDemo)
       setPlants(nextPlants)
       setShinanPlants(nextShinanPlants)
@@ -535,7 +486,6 @@ function useSolarData() {
     loading,
     error,
     forecastRows,
-    regionRiskSummary,
     jeonnamDemo,
     plants,
     shinanPlants,

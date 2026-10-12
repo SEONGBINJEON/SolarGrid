@@ -1,81 +1,4 @@
-export const sectorCouplingDummy = {
-  ess: {
-    id: 'ess',
-    label: 'ESS',
-    nodeLabel: 'ESS Storage',
-    score: 88,
-    rank: 1,
-    role: '잉여 전력 저장',
-    description: '지역 내 저장 인프라 기반으로 단시간 잉여 전력 흡수에 적합',
-    detail: 'ESS 설비용량과 저장 인프라 수준을 기준으로 우선 충전 후보를 평가합니다.',
-    color: '#14b8a6',
-    allocation_pct: 35,
-    allocation_mwh: 44.9,
-  },
-  ev: {
-    id: 'ev',
-    label: 'EV Charging',
-    nodeLabel: 'EV Charging',
-    score: 74,
-    rank: 2,
-    role: '전기차 충전 수요 연계',
-    description: '충전 인프라와 잠재 충전 수요를 활용',
-    detail: '충전기 수, 총 충전 출력, 전기차 등록대수를 활용해 수요 연계 가능성을 평가합니다.',
-    color: '#0ea5e9',
-    allocation_pct: 28,
-    allocation_mwh: 35.9,
-  },
-  p2h: {
-    id: 'p2h',
-    label: 'P2H',
-    nodeLabel: 'P2H Heat Demand',
-    score: 61,
-    rank: 3,
-    role: '전력 → 열에너지 전환',
-    description: '공공시설, 상업시설, 숙박/음식점, 보건/교육시설 등의 열수요 활용 가능',
-    detail: '주요 업종 전력사용량과 기온을 활용해 잠재 열수요를 추정합니다.',
-    color: '#f59e0b',
-    allocation_pct: 18,
-    allocation_mwh: 23.1,
-  },
-  hydrogen: {
-    id: 'hydrogen',
-    label: 'Hydrogen',
-    nodeLabel: 'H₂ Production',
-    score: 52,
-    rank: 4,
-    role: '수소 생산 (P2G)',
-    description: '잉여 전력으로 수전해 기반 수소 생산 및 장기 저장',
-    detail: '수전해 설비를 활용한 그린수소 생산으로 장기 에너지 저장 및 모빌리티 공급이 가능합니다.',
-    color: '#8b5cf6',
-    allocation_pct: 12,
-    allocation_mwh: 15.4,
-  },
-  industrial: {
-    id: 'industrial',
-    label: 'Industrial Load',
-    nodeLabel: 'Industrial Load',
-    score: 44,
-    rank: 5,
-    role: '산업 부하 직접 연계',
-    description: '인근 산업단지·대형 부하에 직접 공급',
-    detail: '지역 산업단지, 농업시설, 어업 시설 등 대형 부하에 잉여 전력을 우선 공급합니다.',
-    color: '#64748b',
-    allocation_pct: 7,
-    allocation_mwh: 9.0,
-  },
-}
-
-export const simulationSummary = {
-  curtailment_window: '11:00 ~ 14:00',
-  total_surplus_mwh: 128.4,
-  utilized_mwh: 92.4,
-  unutilized_mwh: 36.0,
-  curtailment_reduction_pct: 72,
-  efficiency_improvement_pct: 68,
-  carbon_reduction_tco2: 41.2,
-}
-
+// 안좌면 데모 발전소 주변의 섹터커플링 후보 자원 (색상은 Sector Coupling 화면과 동일하게 맞춤)
 export const couplingCandidates = [
   {
     id: 'ess-anjwa-smartfarm',
@@ -83,7 +6,7 @@ export const couplingCandidates = [
     name: '안좌스마트팜앤쏠라시티',
     description: '지역 내 ESS 저장 인프라',
     location: '전남 신안군 안좌면 구대리, 안좌남부길 558 일대',
-    color: '#14b8a6',
+    color: '#0ea5e9',
   },
   {
     id: 'ev-anjwa-kepco',
@@ -91,7 +14,7 @@ export const couplingCandidates = [
     name: '안좌한전 충전소',
     description: '전기차 충전 수요 연계',
     location: '전라남도 신안군 안좌면 안좌동부길 836',
-    color: '#0ea5e9',
+    color: '#8b5cf6',
   },
   {
     id: 'p2h-anjwa-office',
@@ -99,10 +22,6 @@ export const couplingCandidates = [
     name: '안좌면 행정복지센터',
     description: '공공시설 열수요 연계',
     location: '안좌면 인근 공공시설(예시)',
-    color: '#f59e0b',
+    color: '#10b981',
   },
 ]
-
-export function getSectorCouplingRecommendations() {
-  return Object.values(sectorCouplingDummy).sort((a, b) => a.rank - b.rank)
-}

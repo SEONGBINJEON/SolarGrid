@@ -81,7 +81,7 @@ function ForecastChart({
         </div>
       ) : (
         <div className="h-[210px] rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-          <ResponsiveContainer height="100%" width="100%">
+          <ResponsiveContainer height="100%" initialDimension={{ width: 600, height: 200 }} width="100%">
             <AreaChart data={data}>
               <defs>
                 <linearGradient id="solarGradient" x1="0" x2="0" y1="0" y2="1">

@@ -135,7 +135,7 @@ function SurplusBarChart({ data }) {
         </div>
       ) : (
         <div className="h-[210px] rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-          <ResponsiveContainer height="100%" width="100%">
+          <ResponsiveContainer height="100%" initialDimension={{ width: 600, height: 200 }} width="100%">
             <BarChart data={data}>
               <CartesianGrid stroke="rgba(148, 163, 184, 0.18)" vertical={false} />
               <XAxis
