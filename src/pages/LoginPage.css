@@ -57,7 +57,7 @@
 
 .login-brand,
 .login-form,
-.login-signup {
+.login-demo {
   position: relative;
   z-index: 1;
 }
@@ -185,24 +185,44 @@
   box-shadow: 0 20px 40px rgba(8, 33, 61, 0.34);
 }
 
-.login-signup {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: #294b6e;
-  font-size: 13px;
-  font-weight: 600;
+.login-demo {
+  display: grid;
+  gap: 10px;
+  margin-top: -14px;
 }
 
-.login-signup button {
-  border: 0;
-  background: transparent;
+.login-demo-button {
+  min-height: 48px;
+  border: 1px solid rgba(7, 27, 51, 0.32);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.58);
   color: #071b33;
-  padding: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.login-demo-button:hover {
+  border-color: rgba(7, 27, 51, 0.6);
+  background: rgba(255, 255, 255, 0.82);
+  transform: translateY(-1px);
+}
+
+.login-demo-hint {
+  margin: 0;
+  color: #294b6e;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.login-demo-hint strong {
+  color: #071b33;
+  font-weight: 800;
 }
 
 @media (max-width: 900px) {

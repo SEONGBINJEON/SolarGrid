@@ -164,7 +164,7 @@ function SurplusBarChart({ data }) {
   )
 }
 
-function EmptyState({ onForecastOpen }) {
+function EmptyState({ onDemoPlantOpen, onForecastOpen }) {
   return (
     <div className="plant-detail-shell">
       <div className="page-empty-state">
@@ -181,6 +181,11 @@ function EmptyState({ onForecastOpen }) {
           <button className="page-primary-cta" onClick={onForecastOpen} type="button">
             Forecast Map으로 이동
           </button>
+          {onDemoPlantOpen && (
+            <button className="page-secondary-cta" onClick={onDemoPlantOpen} type="button">
+              데모 발전소(안좌솔민 1호) 바로 보기
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -189,6 +194,7 @@ function EmptyState({ onForecastOpen }) {
 
 function PlantDetailPage({
   forecastRows,
+  onDemoPlantOpen,
   onForecastOpen,
   onSectorCouplingOpen,
   sectorCouplingCases,
@@ -197,7 +203,7 @@ function PlantDetailPage({
   selectedPlant,
 }) {
   if (!selectedPlant) {
-    return <EmptyState onForecastOpen={onForecastOpen} />
+    return <EmptyState onDemoPlantOpen={onDemoPlantOpen} onForecastOpen={onForecastOpen} />
   }
 
   const township = getTownship(selectedPlant)

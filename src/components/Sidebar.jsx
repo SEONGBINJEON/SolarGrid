@@ -208,10 +208,10 @@ function Sidebar({
       </div>
 
       <div className="sidebar-user">
-        <div className="sidebar-avatar">J</div>
+        <div className="sidebar-avatar">D</div>
         <div>
-          <p className="sidebar-username">jeonseongbin</p>
-          <p className="sidebar-user-role">관리자</p>
+          <p className="sidebar-username">demo</p>
+          <p className="sidebar-user-role">데모 계정</p>
         </div>
       </div>
 

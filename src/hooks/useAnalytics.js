@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { assetUrl } from '../utils/assetUrl'
 
 // Python 분석 파이프라인(analysis/run_analysis.py)이 만든 결과를 읽는다.
 function useAnalytics() {
@@ -7,7 +8,7 @@ function useAnalytics() {
   useEffect(() => {
     let alive = true
 
-    fetch('/data/analytics.json')
+    fetch(assetUrl('data/analytics.json'))
       .then((response) => {
         if (!response.ok) {
           throw new Error(`analytics.json 로딩 실패 (HTTP ${response.status})`)

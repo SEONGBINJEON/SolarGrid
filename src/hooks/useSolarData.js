@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Papa from 'papaparse'
+import { assetUrl } from '../utils/assetUrl'
 import {
   hourlyForecast as fallbackHourlyForecast,
   jeonnamRegions,
@@ -92,7 +93,7 @@ function convertNumericFields(row) {
 }
 
 async function parseCsv(path, requiredColumns) {
-  const response = await fetch(path)
+  const response = await fetch(assetUrl(path))
 
   if (!response.ok) {
     throw new Error(`${path} 로딩 실패`)

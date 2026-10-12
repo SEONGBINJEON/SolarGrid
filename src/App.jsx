@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar'
 import SidePanel from './components/SidePanel'
 import useSolarData from './hooks/useSolarData'
 import LoginPage from './pages/LoginPage'
+import { isDemoPlant } from './utils/sectorCouplingUtils'
 import {
   buildJeonnamAggregateRows,
   buildJeonnamCityRows,
@@ -15,6 +16,13 @@ import {
 } from './utils/jeonnamTimeUtils'
 
 const AUTH_STORAGE_KEY = 'solargrid-authenticated'
+const PAGE_IDS = ['forecast', 'plantDetail', 'sector', 'analytics']
+
+// 주소 끝의 해시(#/analytics 등)로 화면을 고른다. 새로고침하거나 링크를 공유해도 같은 화면이 열린다.
+function pageFromHash() {
+  const pageId = window.location.hash.replace(/^#\/?/, '')
+  return PAGE_IDS.includes(pageId) ? pageId : 'forecast'
+}
 
 const stageControls = [
   { id: 'national', label: '전국' },
@@ -128,7 +136,7 @@ function TimeControl({ dataHourRange, hourSequence, onHourChange, selectedHour }
 }
 
 function DashboardApp({ onLogout }) {
-  const [currentPage, setCurrentPage] = useState('forecast')
+  const [currentPage, setCurrentPage] = useState(pageFromHash)
   const [viewLevel, setViewLevel] = useState('national')
   const [selectedRegion, setSelectedRegion] = useState(null)
   const [selectedPlant, setSelectedPlant] = useState(null)
@@ -141,6 +149,19 @@ function DashboardApp({ onLogout }) {
   const [controlPanelPosition, setControlPanelPosition] = useState(null)
   const [draggingPanel, setDraggingPanel] = useState(null)
 
+  useEffect(() => {
+    const nextHash = `#/${currentPage}`
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash)
+    }
+  }, [currentPage])
+
+  useEffect(() => {
+    const handleHashChange = () => setCurrentPage(pageFromHash())
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
   const {
     availableDates,
     availableHours,
@@ -152,6 +173,10 @@ function DashboardApp({ onLogout }) {
     sectorCouplingCases,
     shinanPlants,
   } = useSolarData()
+
+  const demoPlant = useMemo(() => shinanPlants.find(isDemoPlant) ?? null, [shinanPlants])
+  // 발전소를 고르지 않고 들어온 방문자가 데모 발전소 화면으로 바로 갈 수 있게 한다.
+  const openDemoPlant = demoPlant ? () => setSelectedPlant(demoPlant) : undefined
 
   const effectiveDate =
     selectedDate && availableDates.includes(selectedDate)
@@ -450,6 +475,7 @@ function DashboardApp({ onLogout }) {
         {currentPage === 'plantDetail' && (
           <PlantDetailPage
             forecastRows={forecastRows}
+            onDemoPlantOpen={openDemoPlant}
             onForecastOpen={openForecastMap}
             onSectorCouplingOpen={openSectorCoupling}
             selectedDate={effectiveDate}
@@ -462,6 +488,7 @@ function DashboardApp({ onLogout }) {
         {/* ---- Sector Coupling page ---- */}
         {currentPage === 'sector' && (
           <SectorCouplingPage
+            onDemoPlantOpen={openDemoPlant}
             onForecastOpen={openForecastMap}
             sectorCouplingCases={sectorCouplingCases}
             selectedPlant={selectedPlant}

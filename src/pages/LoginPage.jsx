@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { assetUrl } from '../utils/assetUrl'
 import './LoginPage.css'
 
+// 공개 데모용 계정이다. 실제 인증이 아니라 화면 진입용이므로 로그인 화면에 그대로 안내한다.
 const DEMO_ID = 'demo'
 const DEMO_PASSWORD = 'solargrid'
 
@@ -21,6 +23,11 @@ function LoginPage({ onLoginSuccess }) {
     setError('ID 또는 Password를 다시 확인해 주세요.')
   }
 
+  const handleDemoLogin = () => {
+    setError('')
+    onLoginSuccess()
+  }
+
   return (
     <main className="login-page">
       <video
@@ -32,7 +39,7 @@ function LoginPage({ onLoginSuccess }) {
         playsInline
         preload="auto"
       >
-        <source src="/videos/Solar%20Panels.mp4" type="video/mp4" />
+        <source src={assetUrl('videos/Solar%20Panels.mp4')} type="video/mp4" />
       </video>
 
       <div className="login-backdrop" />
@@ -98,9 +105,13 @@ function LoginPage({ onLoginSuccess }) {
           </button>
         </form>
 
-        <div className="login-signup">
-          <span>계정이 없으신가요?</span>
-          <button type="button">회원가입</button>
+        <div className="login-demo">
+          <button className="login-demo-button" onClick={handleDemoLogin} type="button">
+            데모 계정으로 둘러보기
+          </button>
+          <p className="login-demo-hint">
+            데모 계정 <strong>{DEMO_ID}</strong> / <strong>{DEMO_PASSWORD}</strong>
+          </p>
         </div>
       </section>
     </main>

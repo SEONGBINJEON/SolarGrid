@@ -2426,6 +2426,27 @@ input {
   background: #1e293b;
 }
 
+.page-secondary-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 20px 0 0 8px;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.page-secondary-cta:hover {
+  border-color: rgba(15, 23, 42, 0.4);
+  background: #f8fafc;
+}
+
 /* ---- What-if 시뮬레이터 (Sector Coupling) ---- */
 
 .wi-card {

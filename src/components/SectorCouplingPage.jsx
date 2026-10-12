@@ -16,6 +16,7 @@ import {
   simulateAllocation,
   surplusFromRows,
 } from '../utils/allocationSimulator'
+import { assetUrl } from '../utils/assetUrl'
 import WhatIfSimulator from './WhatIfSimulator'
 
 // ---- Case definitions ----
@@ -558,7 +559,7 @@ function CompareTable({ compareData, activeCase, socUtilByMethod }) {
 }
 
 // ---- Empty state ----
-function EmptySectorState({ onForecastOpen }) {
+function EmptySectorState({ onDemoPlantOpen, onForecastOpen }) {
   return (
     <div
       className="sector-shell"
@@ -595,18 +596,23 @@ function EmptySectorState({ onForecastOpen }) {
         <button className="page-primary-cta" onClick={onForecastOpen} type="button">
           Forecast Map으로 이동
         </button>
+        {onDemoPlantOpen && (
+          <button className="page-secondary-cta" onClick={onDemoPlantOpen} type="button">
+            데모 발전소(안좌솔민 1호) 바로 보기
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
 // ---- Main component ----
-function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases }) {
+function SectorCouplingPage({ onDemoPlantOpen, onForecastOpen, selectedPlant, sectorCouplingCases }) {
   const [activeCase, setActiveCase] = useState(1)
   const [compareData, setCompareData] = useState([])
 
   useEffect(() => {
-    fetch('/data/sector_coupling_compare.csv')
+    fetch(assetUrl('data/sector_coupling_compare.csv'))
       .then((r) => r.text())
       .then((text) => {
         const { data } = Papa.parse(text.replace(/^\uFEFF/, ''), {
@@ -650,7 +656,7 @@ function SectorCouplingPage({ onForecastOpen, selectedPlant, sectorCouplingCases
   }, [sectorCouplingCases])
 
   if (!selectedPlant) {
-    return <EmptySectorState onForecastOpen={onForecastOpen} />
+    return <EmptySectorState onDemoPlantOpen={onDemoPlantOpen} onForecastOpen={onForecastOpen} />
   }
 
   const caseInfo = CASE_DEFS[activeCase]
