@@ -5,6 +5,11 @@
 > 2026 영남대학교 SW·HUSS·COSS 융합 AI해커톤 · 팀 시너지온(8조)
 > 해커톤 이후 **데이터 품질 관리와 공정 분석** 관점으로 고도화한 버전입니다.
 
+**라이브 데모 → https://seongbinjeon.github.io/SolarGrid/**
+로그인 화면에서 **「데모 계정으로 둘러보기」** 를 누르면 바로 들어갑니다. (데모 계정 `demo` / `solargrid`)
+공정 분석 화면 바로가기: [Process Analytics](https://seongbinjeon.github.io/SolarGrid/#/analytics) ·
+What-if 시뮬레이터: [Sector Coupling](https://seongbinjeon.github.io/SolarGrid/#/sector) 화면에서 「데모 발전소 바로 보기」
+
 ![Forecast Map 전국 화면](docs/images/forecast-map.jpg)
 
 계통이 받아주지 못해 버려지는 태양광 전력(출력제한)을 제조 현장의 **생산 손실**로 보고,
@@ -58,6 +63,7 @@ flowchart LR
     D --> F["analysis/reports/analysis_report.md"]
     C --> G["React 대시보드"]
     E --> G
+    G --> H["GitHub Pages"]
 ```
 
 - **분석 계층 (Python)**: 원천 데이터를 검사하고 분석해 결과를 JSON과 보고서로 남깁니다. 같은 입력이면 언제든 같은 숫자가 나옵니다.
@@ -136,7 +142,7 @@ flowchart LR
 
 ## 품질 보증 (GitHub Actions)
 
-push와 Pull Request마다 [CI 워크플로](.github/workflows/ci.yml)가 실행됩니다.
+push와 Pull Request마다 [CI 워크플로](.github/workflows/ci.yml)가 실행되고, 통과한 main만 GitHub Pages에 배포됩니다.
 
 | 작업 | 검사 내용 |
 |---|---|
@@ -150,7 +156,7 @@ push와 Pull Request마다 [CI 워크플로](.github/workflows/ci.yml)가 실행
 
 ```text
 solar-dashboard/
-├─ .github/workflows/        CI (린트 · 테스트 · 빌드 · 분석 재현성)
+├─ .github/workflows/        CI (린트 · 테스트 · 빌드 · 분석 재현성) 와 Pages 배포
 ├─ analysis/                 Python 분석 파이프라인
 │  ├─ solargrid/             address · allocation · patterns · quality · io 모듈
 │  ├─ tests/                 pytest 테스트 34개
